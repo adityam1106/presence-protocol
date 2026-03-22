@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 
 export default function HomePage() {
-  const { t } = useLanguage();
+  const { lang, setLang, t } = useLanguage();
 
   const STEPS = [
     {
@@ -45,6 +45,38 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-[#080808] text-white font-[Inter,sans-serif] antialiased">
+
+      {/* ── Language toggle ── */}
+      <button
+        onClick={() => setLang(lang === 'en' ? 'de' : 'en')}
+        style={{
+          position: 'fixed',
+          top: 20,
+          right: 24,
+          zIndex: 9999,
+          fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
+          fontSize: 11,
+          fontWeight: 600,
+          letterSpacing: '0.15em',
+          padding: '6px 14px',
+          background: 'rgba(6,6,8,0.85)',
+          border: '1px solid #374151',
+          color: '#d1d5db',
+          cursor: 'pointer',
+          backdropFilter: 'blur(8px)',
+          transition: 'color 0.2s ease, border-color 0.2s ease',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.color = '#ffffff';
+          e.currentTarget.style.borderColor = '#2563eb';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.color = '#d1d5db';
+          e.currentTarget.style.borderColor = '#374151';
+        }}
+      >
+        {lang === 'en' ? 'DE' : 'EN'}
+      </button>
 
       {/* ── Hero Section ── */}
       <section className="relative h-screen flex flex-col items-center justify-center overflow-hidden">
