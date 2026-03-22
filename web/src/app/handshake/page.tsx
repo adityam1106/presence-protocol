@@ -5,8 +5,15 @@ import NavBar from '../components/NavBar';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const VERIFICATION_TIME = '2026-03-22T03:16:48.000Z';
+const VERIFICATION_TIME = new Date().toISOString();
 const SESSION_ID = 'a7c3e9f1-4b2d-8e6a-0f5c-3d9b7e1a2c4f';
+
+// Shield SVG geometry
+const SHIELD_PATH =
+  'M60 8 L12 30 L12 60 C12 92 32 120 60 130 C88 120 108 92 108 60 L108 30 Z';
+const PATH_LENGTH = 340;
+const CHECK_PATH = 'M38 65 L52 80 L82 48';
+const CHECK_LENGTH = 70;
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -22,16 +29,16 @@ export default function HandshakePage() {
   const rafRef = useRef<number | null>(null);
   const startRef = useRef<number>(0);
 
-  // Shield stroke animation — 2.4 seconds
+  // Shield stroke animation — 2 seconds with heavy cubic-bezier easing
   useEffect(() => {
     startRef.current = performance.now();
 
     const animate = (now: number) => {
       const elapsed = now - startRef.current;
-      const duration = 2400;
+      const duration = 2000;
       const progress = Math.min(elapsed / duration, 1);
 
-      // Easing: cubic-bezier approximation — slow start, heavy finish
+      // Heavy cubic-bezier easing — slow start, heavy slam finish
       const eased =
         progress < 0.5
           ? 4 * progress * progress * progress
@@ -42,10 +49,10 @@ export default function HandshakePage() {
       if (progress < 1) {
         rafRef.current = requestAnimationFrame(animate);
       } else {
-        // Shield fully drawn → vault lock phase
+        // Shield fully drawn → vault lock
         setPhase('locking');
 
-        // Flash effect — vault slams shut
+        // Flash — vault slams shut
         setTimeout(() => {
           setLockFlash(true);
           setTimeout(() => setLockFlash(false), 200);
@@ -78,49 +85,68 @@ export default function HandshakePage() {
     hour12: false,
   });
 
-  // Shield SVG path total length (measured)
-  const SHIELD_PATH =
-    'M60 8 L12 30 L12 60 C12 92 32 120 60 130 C88 120 108 92 108 60 L108 30 Z';
-  const PATH_LENGTH = 340;
-
-  // Checkmark inside shield
-  const CHECK_PATH = 'M38 65 L52 80 L82 48';
-  const CHECK_LENGTH = 70;
-
   return (
-    <main style={styles.main}>
+    <main
+      className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden select-none"
+      style={{
+        background: '#080808',
+        fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
+      }}
+    >
       <NavBar />
-      {/* ── Font import ── */}
+
+      {/* Font import */}
       {/* eslint-disable-next-line @next/next/no-page-custom-font */}
       <link
-        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Inter:wght@200;300;400&display=swap"
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=Inter:wght@100;200;300;400&display=swap"
         rel="stylesheet"
       />
 
-      {/* ── Lock flash overlay ── */}
+      {/* ── Lock flash — vault slam overlay ── */}
       <div
+        className="fixed inset-0 pointer-events-none z-50 transition-opacity duration-200"
         style={{
-          ...styles.flashOverlay,
+          background: 'radial-gradient(circle at center, rgba(37,99,235,0.15) 0%, transparent 70%)',
           opacity: lockFlash ? 1 : 0,
         }}
       />
 
       {/* ── Subtle grid background ── */}
-      <div style={styles.gridBg} />
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage:
+            'linear-gradient(rgba(37,99,235,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(37,99,235,0.02) 1px, transparent 1px)',
+          backgroundSize: '60px 60px',
+        }}
+      />
 
-      {/* ── Scan line effect ── */}
-      <div style={styles.scanLine} />
+      {/* ── Scan line ── */}
+      <div
+        className="absolute left-0 right-0 pointer-events-none z-10"
+        style={{
+          height: 1,
+          background: 'linear-gradient(90deg, transparent, rgba(37,99,235,0.06), transparent)',
+          animation: 'scanMove 8s linear infinite',
+        }}
+      />
 
-      {/* ── Center content ── */}
-      <div style={styles.centerColumn}>
-        {/* ── Shield icon ── */}
-        <div style={styles.shieldContainer}>
+      {/* ═══ CENTER CONTENT ═══ */}
+      <div className="flex flex-col items-center z-20 px-6 w-full" style={{ maxWidth: 600 }}>
+
+        {/* ── SHIELD SVG ── */}
+        <div className="relative flex items-center justify-center mb-12" style={{ width: 160, height: 180 }}>
           {/* Glow behind shield */}
           <div
+            className="absolute transition-all duration-600"
             style={{
-              ...styles.shieldGlow,
-              opacity: phase === 'drawing' ? strokeProgress * 0.4 : 0.6,
-              transform: lockFlash ? 'scale(1.8)' : 'scale(1)',
+              width: 220,
+              height: 220,
+              background: 'radial-gradient(circle, rgba(37,99,235,0.15) 0%, transparent 70%)',
+              opacity: phase === 'drawing' ? strokeProgress * 0.5 : 0.7,
+              transform: lockFlash ? 'scale(2)' : 'scale(1)',
+              transition: 'opacity 0.6s ease, transform 0.3s ease',
+              zIndex: 1,
             }}
           />
 
@@ -129,40 +155,37 @@ export default function HandshakePage() {
             height="138"
             viewBox="0 0 120 138"
             fill="none"
-            style={{ position: 'relative', zIndex: 2 }}
+            className="relative z-10"
           >
-            {/* Shield outline — stroke draws in */}
+            {/* Shield outline — strokes in via dashoffset */}
             <path
               d={SHIELD_PATH}
-              stroke="#00a8ff"
-              strokeWidth="2.5"
+              stroke="#2563eb"
+              strokeWidth="2"
               strokeLinecap="square"
               strokeLinejoin="miter"
               fill="none"
               style={{
                 strokeDasharray: PATH_LENGTH,
                 strokeDashoffset: PATH_LENGTH * (1 - strokeProgress),
-                filter: 'drop-shadow(0 0 12px rgba(0,168,255,0.6))',
-                transition: 'filter 0.3s ease',
+                filter: 'drop-shadow(0 0 14px rgba(37,99,235,0.5))',
               }}
             />
 
-            {/* Shield fill — fades in after lock */}
+            {/* Shield fill — appears after lock */}
             <path
               d={SHIELD_PATH}
-              fill="rgba(0,168,255,0.04)"
+              fill="rgba(37,99,235,0.03)"
               stroke="none"
-              style={{
-                opacity: phase === 'drawing' ? 0 : 1,
-                transition: 'opacity 0.6s ease',
-              }}
+              className="transition-opacity duration-600"
+              style={{ opacity: phase === 'drawing' ? 0 : 1 }}
             />
 
-            {/* Checkmark — draws after shield */}
+            {/* Checkmark — draws inside after shield completes */}
             <path
               d={CHECK_PATH}
-              stroke="#00a8ff"
-              strokeWidth="3.5"
+              stroke="#2563eb"
+              strokeWidth="3"
               strokeLinecap="square"
               strokeLinejoin="miter"
               fill="none"
@@ -172,135 +195,236 @@ export default function HandshakePage() {
                   phase === 'drawing' || phase === 'locking'
                     ? CHECK_LENGTH
                     : 0,
-                transition: 'stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.15s',
-                filter: 'drop-shadow(0 0 8px rgba(0,168,255,0.5))',
+                transition: 'stroke-dashoffset 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.15s',
+                filter: 'drop-shadow(0 0 10px rgba(37,99,235,0.6))',
               }}
             />
           </svg>
 
-          {/* Corner brackets — appear after lock */}
+          {/* Corner brackets — targeting reticle */}
           <div
+            className="absolute pointer-events-none transition-opacity duration-600"
             style={{
-              ...styles.cornerBrackets,
+              inset: -12,
               opacity: showText ? 1 : 0,
             }}
           >
-            <span style={{ ...styles.corner, top: -8, left: -8 }} />
+            {/* Top-left */}
             <span
+              className="absolute"
               style={{
-                ...styles.corner,
-                top: -8,
-                right: -8,
-                borderLeft: 'none',
-                borderRight: '1px solid rgba(0,168,255,0.3)',
+                top: -8, left: -8,
+                width: 16, height: 16,
+                borderTop: '1px solid rgba(37,99,235,0.25)',
+                borderLeft: '1px solid rgba(37,99,235,0.25)',
               }}
             />
+            {/* Top-right */}
             <span
+              className="absolute"
               style={{
-                ...styles.corner,
-                bottom: -8,
-                left: -8,
-                borderTop: 'none',
-                borderBottom: '1px solid rgba(0,168,255,0.3)',
+                top: -8, right: -8,
+                width: 16, height: 16,
+                borderTop: '1px solid rgba(37,99,235,0.25)',
+                borderRight: '1px solid rgba(37,99,235,0.25)',
               }}
             />
+            {/* Bottom-left */}
             <span
+              className="absolute"
               style={{
-                ...styles.corner,
-                bottom: -8,
-                right: -8,
-                borderTop: 'none',
-                borderLeft: 'none',
-                borderRight: '1px solid rgba(0,168,255,0.3)',
-                borderBottom: '1px solid rgba(0,168,255,0.3)',
+                bottom: -8, left: -8,
+                width: 16, height: 16,
+                borderBottom: '1px solid rgba(37,99,235,0.25)',
+                borderLeft: '1px solid rgba(37,99,235,0.25)',
+              }}
+            />
+            {/* Bottom-right */}
+            <span
+              className="absolute"
+              style={{
+                bottom: -8, right: -8,
+                width: 16, height: 16,
+                borderBottom: '1px solid rgba(37,99,235,0.25)',
+                borderRight: '1px solid rgba(37,99,235,0.25)',
               }}
             />
           </div>
         </div>
 
-        {/* ── PRESENCE VERIFIED ── */}
+        {/* ── PRESENCE VERIFIED — massive thin uppercase ── */}
         <h1
+          className="text-center mb-5 transition-all duration-800"
           style={{
-            ...styles.title,
+            fontSize: 'clamp(28px, 5vw, 42px)',
+            fontWeight: 100,
+            letterSpacing: '0.35em',
+            color: '#ffffff',
+            textTransform: 'uppercase',
+            fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
             opacity: showText ? 1 : 0,
-            transform: showText ? 'translateY(0)' : 'translateY(16px)',
+            transform: showText ? 'translateY(0)' : 'translateY(20px)',
           }}
         >
           PRESENCE VERIFIED
         </h1>
 
-        {/* ── Subtitle ── */}
+        {/* ── Subtitle — grey monospace ── */}
         <p
+          className="text-center mb-10 transition-all duration-800"
           style={{
-            ...styles.subtitle,
+            fontSize: '12px',
+            color: '#555',
+            letterSpacing: '0.04em',
+            lineHeight: '1.8',
+            maxWidth: 480,
+            fontFamily: "'IBM Plex Mono', monospace",
             opacity: showText ? 1 : 0,
-            transform: showText ? 'translateY(0)' : 'translateY(12px)',
+            transform: showText ? 'translateY(0)' : 'translateY(14px)',
             transitionDelay: '0.15s',
           }}
         >
-          Physical presence confirmed via ultrasonic handshake — Transaction
-          authorised
+          Physical presence confirmed via ultrasonic handshake — Transaction authorised
         </p>
 
         {/* ── Divider ── */}
         <div
+          className="mb-8 transition-all duration-600"
           style={{
-            ...styles.divider,
+            width: 120,
+            height: 1,
+            background: 'linear-gradient(90deg, transparent, rgba(37,99,235,0.3), transparent)',
             opacity: showDetails ? 1 : 0,
             transform: showDetails ? 'scaleX(1)' : 'scaleX(0)',
+            transformOrigin: 'center',
           }}
         />
 
-        {/* ── Timestamp ── */}
+        {/* ── Session ID — electric blue monospace ── */}
         <div
+          className="flex flex-col items-center gap-1.5 mb-5 transition-all duration-600"
           style={{
-            ...styles.detailRow,
             opacity: showDetails ? 1 : 0,
             transform: showDetails ? 'translateY(0)' : 'translateY(10px)',
           }}
         >
-          <span style={styles.detailLabel}>VERIFIED AT</span>
-          <span style={styles.detailValue}>{formattedTime}</span>
+          <span
+            className="text-xs uppercase font-medium"
+            style={{
+              fontSize: '9px',
+              letterSpacing: '0.2em',
+              color: '#444',
+              fontFamily: "'IBM Plex Mono', monospace",
+            }}
+          >
+            SESSION
+          </span>
+          <span
+            className="font-medium session-glow"
+            style={{
+              fontSize: '14px',
+              color: '#2563eb',
+              letterSpacing: '0.06em',
+              fontFamily: "'IBM Plex Mono', monospace",
+              textShadow: '0 0 20px rgba(37,99,235,0.3)',
+            }}
+          >
+            {SESSION_ID}
+          </span>
         </div>
 
-        {/* ── Session ID ── */}
+        {/* ── Timestamp ── */}
         <div
+          className="flex flex-col items-center gap-1.5 mb-5 transition-all duration-600"
           style={{
-            ...styles.detailRow,
             opacity: showDetails ? 1 : 0,
             transform: showDetails ? 'translateY(0)' : 'translateY(10px)',
             transitionDelay: '0.1s',
           }}
         >
-          <span style={styles.detailLabel}>SESSION</span>
-          <span style={styles.sessionId}>{SESSION_ID}</span>
+          <span
+            className="text-xs uppercase font-medium"
+            style={{
+              fontSize: '9px',
+              letterSpacing: '0.2em',
+              color: '#444',
+              fontFamily: "'IBM Plex Mono', monospace",
+            }}
+          >
+            VERIFIED AT
+          </span>
+          <span
+            className="font-light"
+            style={{
+              fontSize: '13px',
+              color: '#777',
+              letterSpacing: '0.05em',
+              fontFamily: "'IBM Plex Mono', monospace",
+            }}
+          >
+            {formattedTime}
+          </span>
         </div>
 
         {/* ── Anti-deepfake notice ── */}
         <p
+          className="text-center transition-all duration-800"
           style={{
-            ...styles.antiDeepfake,
+            fontSize: '10px',
+            letterSpacing: '0.08em',
+            color: '#333',
+            maxWidth: 440,
+            lineHeight: '1.7',
+            marginTop: 48,
+            paddingTop: 24,
+            borderTop: '1px solid #151515',
+            fontFamily: "'IBM Plex Mono', monospace",
             opacity: showFooter ? 1 : 0,
             transform: showFooter ? 'translateY(0)' : 'translateY(8px)',
           }}
         >
-          This verification cannot be replicated by voice cloning or deepfake
-          technology
+          THIS CONFIRMATION CANNOT BE REPLICATED BY VOICE CLONING OR DEEPFAKE TECHNOLOGY
         </p>
       </div>
 
-      {/* ── Bottom protocol bar ── */}
+      {/* ═══ BOTTOM PROTOCOL BAR ═══ */}
       <footer
+        className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-6 py-3 border-t z-20 transition-opacity duration-800"
         style={{
-          ...styles.footer,
+          borderColor: '#141414',
+          background: '#080808',
           opacity: showFooter ? 1 : 0,
         }}
       >
-        <div style={styles.footerLeft}>
-          <div style={styles.footerDot} />
-          <span style={styles.footerLabel}>PROTOCOL SEALED</span>
+        <div className="flex items-center gap-2">
+          <div
+            className="w-1.5 h-1.5"
+            style={{
+              background: '#2563eb',
+              boxShadow: '0 0 10px rgba(37,99,235,0.5)',
+            }}
+          />
+          <span
+            className="text-xs uppercase font-medium"
+            style={{
+              fontSize: '10px',
+              letterSpacing: '0.12em',
+              color: '#444',
+              fontFamily: "'IBM Plex Mono', monospace",
+            }}
+          >
+            PROTOCOL SEALED
+          </span>
         </div>
-        <span style={styles.footerRight}>
+        <span
+          className="text-xs"
+          style={{
+            fontSize: '9px',
+            letterSpacing: '0.1em',
+            color: '#222',
+            fontFamily: "'IBM Plex Mono', monospace",
+          }}
+        >
           PRESENCE PROTOCOL v1.0 — IMMUTABLE RECORD
         </span>
       </footer>
@@ -312,235 +436,13 @@ export default function HandshakePage() {
           100% { top: 100%; }
         }
         @keyframes subtlePulse {
-          0%, 100% { opacity: 0.6; }
+          0%, 100% { opacity: 0.7; }
           50% { opacity: 1; }
+        }
+        .session-glow {
+          animation: subtlePulse 3s ease-in-out infinite;
         }
       `}</style>
     </main>
   );
 }
-
-// ─── Styles ──────────────────────────────────────────────────────────────────
-
-const styles: Record<string, React.CSSProperties> = {
-  main: {
-    position: 'relative',
-    minHeight: '100vh',
-    width: '100%',
-    background: '#060608',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-    fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
-  },
-
-  // Flash overlay — vault slam
-  flashOverlay: {
-    position: 'fixed',
-    inset: 0,
-    background: 'radial-gradient(circle at center, rgba(0,168,255,0.15) 0%, transparent 70%)',
-    pointerEvents: 'none' as const,
-    zIndex: 100,
-    transition: 'opacity 0.2s ease',
-  },
-
-  // Background grid
-  gridBg: {
-    position: 'absolute',
-    inset: 0,
-    backgroundImage:
-      'linear-gradient(rgba(0,168,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,168,255,0.03) 1px, transparent 1px)',
-    backgroundSize: '60px 60px',
-    pointerEvents: 'none' as const,
-  },
-
-  // Scan line
-  scanLine: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    height: 1,
-    background: 'linear-gradient(90deg, transparent, rgba(0,168,255,0.08), transparent)',
-    animation: 'scanMove 8s linear infinite',
-    pointerEvents: 'none' as const,
-    zIndex: 10,
-  },
-
-  // Center column
-  centerColumn: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 0,
-    zIndex: 20,
-    padding: '0 24px',
-    maxWidth: 600,
-    width: '100%',
-  },
-
-  // Shield
-  shieldContainer: {
-    position: 'relative',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 160,
-    height: 180,
-    marginBottom: 48,
-  },
-
-  shieldGlow: {
-    position: 'absolute',
-    width: 200,
-    height: 200,
-    background: 'radial-gradient(circle, rgba(0,168,255,0.2) 0%, transparent 70%)',
-    transition: 'opacity 0.6s ease, transform 0.3s ease',
-    zIndex: 1,
-  },
-
-  // Corner brackets
-  cornerBrackets: {
-    position: 'absolute',
-    inset: -12,
-    transition: 'opacity 0.6s ease',
-    pointerEvents: 'none' as const,
-  },
-  corner: {
-    position: 'absolute' as const,
-    width: 16,
-    height: 16,
-    borderTop: '1px solid rgba(0,168,255,0.3)',
-    borderLeft: '1px solid rgba(0,168,255,0.3)',
-  },
-
-  // Title
-  title: {
-    fontSize: 32,
-    fontWeight: 200,
-    letterSpacing: '0.35em',
-    color: '#ffffff',
-    textTransform: 'uppercase' as const,
-    fontFamily: "'Inter', sans-serif",
-    marginBottom: 16,
-    transition: 'opacity 0.8s ease, transform 0.8s ease',
-    textAlign: 'center' as const,
-  },
-
-  // Subtitle
-  subtitle: {
-    fontSize: 13,
-    fontWeight: 300,
-    lineHeight: '1.8',
-    color: '#6b7280',
-    textAlign: 'center' as const,
-    maxWidth: 480,
-    marginBottom: 36,
-    letterSpacing: '0.02em',
-    transition: 'opacity 0.8s ease, transform 0.8s ease',
-  },
-
-  // Divider
-  divider: {
-    width: 120,
-    height: 1,
-    background: 'linear-gradient(90deg, transparent, rgba(0,168,255,0.3), transparent)',
-    marginBottom: 32,
-    transition: 'opacity 0.6s ease, transform 0.6s ease',
-    transformOrigin: 'center',
-  },
-
-  // Detail row
-  detailRow: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 20,
-    transition: 'opacity 0.6s ease, transform 0.6s ease',
-  },
-
-  detailLabel: {
-    fontSize: 9,
-    fontWeight: 500,
-    letterSpacing: '0.2em',
-    color: '#4b5563',
-    fontFamily: "'IBM Plex Mono', monospace",
-  },
-
-  detailValue: {
-    fontSize: 13,
-    fontWeight: 300,
-    color: '#9ca3af',
-    letterSpacing: '0.05em',
-    fontFamily: "'IBM Plex Mono', monospace",
-  },
-
-  // Session ID — electric blue monospace
-  sessionId: {
-    fontSize: 14,
-    fontWeight: 500,
-    color: '#00a8ff',
-    letterSpacing: '0.06em',
-    fontFamily: "'IBM Plex Mono', monospace",
-    textShadow: '0 0 20px rgba(0,168,255,0.3)',
-    animation: 'subtlePulse 3s ease-in-out infinite',
-  },
-
-  // Anti-deepfake footer text
-  antiDeepfake: {
-    fontSize: 10,
-    fontWeight: 300,
-    letterSpacing: '0.08em',
-    color: '#374151',
-    textAlign: 'center' as const,
-    marginTop: 48,
-    paddingTop: 24,
-    borderTop: '1px solid #111318',
-    maxWidth: 440,
-    lineHeight: '1.6',
-    transition: 'opacity 0.8s ease, transform 0.8s ease',
-    fontFamily: "'IBM Plex Mono', monospace",
-  },
-
-  // Footer bar
-  footer: {
-    position: 'absolute' as const,
-    bottom: 0,
-    left: 0,
-    right: 0,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '12px 24px',
-    borderTop: '1px solid #0e0e14',
-    background: '#060608',
-    transition: 'opacity 0.8s ease',
-    zIndex: 20,
-  },
-  footerLeft: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-  },
-  footerDot: {
-    width: 6,
-    height: 6,
-    background: '#00a8ff',
-    boxShadow: '0 0 10px rgba(0,168,255,0.5)',
-  },
-  footerLabel: {
-    fontSize: 10,
-    letterSpacing: '0.12em',
-    color: '#4b5563',
-    fontFamily: "'IBM Plex Mono', monospace",
-    fontWeight: 500,
-  },
-  footerRight: {
-    fontSize: 9,
-    letterSpacing: '0.1em',
-    color: '#1f2937',
-    fontFamily: "'IBM Plex Mono', monospace",
-  },
-};
