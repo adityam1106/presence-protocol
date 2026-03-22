@@ -108,7 +108,7 @@ export default function HomePage() {
         {/* ── Run Full Demo ── */}
         <div className="flex justify-center mt-20">
           <Link
-            href="/call"
+            href="/demo"
             className="inline-flex items-center gap-3 px-12 py-4 text-[13px] font-medium tracking-[0.15em] uppercase text-white bg-[#2563EB] hover:bg-[#1d4ed8] transition-colors duration-200 no-underline"
           >
             Run Full Demo
