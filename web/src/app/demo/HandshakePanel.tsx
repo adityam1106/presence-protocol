@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import type { TranslationKey } from '@/lib/i18n';
 
 const SHIELD_PATH =
   'M60 8 L12 30 L12 60 C12 92 32 120 60 130 C88 120 108 92 108 60 L108 30 Z';
@@ -8,7 +9,7 @@ const PATH_LENGTH  = 340;
 const CHECK_PATH   = 'M38 65 L52 80 L82 48';
 const CHECK_LENGTH = 70;
 
-export default function HandshakePanel({ active }: { active: boolean }) {
+export default function HandshakePanel({ active, t }: { active: boolean; t: (key: TranslationKey) => string }) {
   const [phase, setPhase] = useState<'idle' | 'drawing' | 'locking' | 'revealed' | 'complete'>('idle');
   const [strokeProgress, setStrokeProgress] = useState(0);
   const [showText,    setShowText]    = useState(false);
@@ -27,7 +28,6 @@ export default function HandshakePanel({ active }: { active: boolean }) {
       const elapsed  = now - startRef.current;
       const duration = 2000;
       const progress = Math.min(elapsed / duration, 1);
-      // Cubic-bezier easing — heavy slam finish
       const eased =
         progress < 0.5
           ? 4 * progress * progress * progress
@@ -89,7 +89,6 @@ export default function HandshakePanel({ active }: { active: boolean }) {
 
         {/* Shield SVG */}
         <div className="relative flex items-center justify-center mb-8" style={{ width: 120, height: 138 }}>
-          {/* Glow halo */}
           <div
             className="absolute"
             style={{
@@ -103,7 +102,6 @@ export default function HandshakePanel({ active }: { active: boolean }) {
           />
 
           <svg width="120" height="138" viewBox="0 0 120 138" fill="none" className="relative z-10">
-            {/* Shield outline — strokes in via dashoffset */}
             <path
               d={SHIELD_PATH}
               stroke="#2563eb"
@@ -117,7 +115,6 @@ export default function HandshakePanel({ active }: { active: boolean }) {
                 filter: 'drop-shadow(0 0 12px rgba(37,99,235,0.5))',
               }}
             />
-            {/* Shield fill — appears after lock */}
             <path
               d={SHIELD_PATH}
               fill="rgba(37,99,235,0.03)"
@@ -127,7 +124,6 @@ export default function HandshakePanel({ active }: { active: boolean }) {
                 transition: 'opacity 0.6s ease',
               }}
             />
-            {/* Checkmark */}
             <path
               d={CHECK_PATH}
               stroke="#2563eb"
@@ -153,7 +149,7 @@ export default function HandshakePanel({ active }: { active: boolean }) {
           <div className="flex flex-col items-center gap-3 text-center">
             <div className="w-1.5 h-1.5" style={{ background: '#2a2a2a' }} />
             <span style={{ color: '#2a2a2a', letterSpacing: '0.15em', fontSize: '9px' }}>
-              AWAITING VERIFICATION SIGNAL
+              {t('demo.awaiting_signal')}
             </span>
           </div>
         )}
@@ -172,7 +168,7 @@ export default function HandshakePanel({ active }: { active: boolean }) {
             transition: 'opacity 0.8s ease, transform 0.8s ease',
           }}
         >
-          PRESENCE VERIFIED
+          {t('demo.verified_title')}
         </h2>
 
         <p
@@ -188,13 +184,13 @@ export default function HandshakePanel({ active }: { active: boolean }) {
             transition: 'opacity 0.8s ease 0.15s, transform 0.8s ease 0.15s',
           }}
         >
-          Physical presence confirmed via ultrasonic handshake
+          {t('demo.verified_sub')}
         </p>
 
         {/* Session detail */}
         {showDetails && (
           <div className="flex flex-col items-center gap-1.5 mb-3">
-            <span style={{ fontSize: '7px', letterSpacing: '0.2em', color: '#444' }}>SESSION</span>
+            <span style={{ fontSize: '7px', letterSpacing: '0.2em', color: '#444' }}>{t('demo.session')}</span>
             <span
               className="font-medium"
               style={{
@@ -216,7 +212,7 @@ export default function HandshakePanel({ active }: { active: boolean }) {
               style={{ background: '#2563eb', boxShadow: '0 0 8px rgba(37,99,235,0.5)' }}
             />
             <span style={{ fontSize: '8px', color: '#444', letterSpacing: '0.1em' }}>
-              PROTOCOL SEALED
+              {t('demo.protocol_sealed')}
             </span>
           </div>
         )}

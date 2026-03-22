@@ -5,15 +5,15 @@ import Link from 'next/link';
 import BankPanel from './BankPanel';
 import PhonePanel from './PhonePanel';
 import HandshakePanel from './HandshakePanel';
+import { useLanguage } from '@/context/LanguageContext';
 
 type BankStage = 'idle' | 'processing' | 'approved';
 type PhonePhase = 'inactive' | 'received' | 'signing' | 'transmitted';
 
 const DEMO_DURATION = 8000;
 
-const PANEL_LABELS = ['BANK TERMINAL', 'MOBILE DEVICE', 'VERIFICATION SYSTEM'] as const;
-
 export default function DemoPage() {
+  const { t } = useLanguage();
   const [bankStage,       setBankStage]       = useState<BankStage>('idle');
   const [phonePhase,      setPhonePhase]      = useState<PhonePhase>('inactive');
   const [handshakeActive, setHandshakeActive] = useState(false);
@@ -21,6 +21,12 @@ export default function DemoPage() {
   const [handshakeKey,    setHandshakeKey]    = useState(0);
   const [isRunning,       setIsRunning]       = useState(false);
   const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  const PANEL_LABELS = [
+    t('demo.label_bank'),
+    t('demo.label_phone'),
+    t('demo.label_handshake'),
+  ];
 
   const clearAllTimeouts = useCallback(() => {
     timeoutsRef.current.forEach(clearTimeout);
@@ -30,7 +36,6 @@ export default function DemoPage() {
   const startDemo = useCallback(() => {
     clearAllTimeouts();
 
-    // Reset all panel state
     setBankStage('idle');
     setPhonePhase('inactive');
     setHandshakeActive(false);
@@ -38,28 +43,28 @@ export default function DemoPage() {
     setProgressKey((k) => k + 1);
     setHandshakeKey((k) => k + 1);
 
-    const t = (ms: number, fn: () => void) => {
+    const schedule = (ms: number, fn: () => void) => {
       const id = setTimeout(fn, ms);
       timeoutsRef.current.push(id);
     };
 
     // T+0s — bank terminal activates, starts broadcasting
-    t(0, () => setBankStage('processing'));
+    schedule(0, () => setBankStage('processing'));
 
     // T+2s — phone panel activates, challenge received
-    t(2000, () => setPhonePhase('received'));
+    schedule(2000, () => setPhonePhase('received'));
 
     // T+4s — phone: signing with secure enclave
-    t(4000, () => setPhonePhase('signing'));
+    schedule(4000, () => setPhonePhase('signing'));
 
     // T+6s — phone: presence transmitted; handshake shield begins drawing
-    t(6000, () => {
+    schedule(6000, () => {
       setPhonePhase('transmitted');
       setHandshakeActive(true);
     });
 
-    // T+8s — bank shows TRANSACTION AUTHORISED; all panels in final state
-    t(8000, () => {
+    // T+8s — bank shows TRANSACTION AUTHORISED
+    schedule(8000, () => {
       setBankStage('approved');
       setIsRunning(false);
     });
@@ -113,7 +118,7 @@ export default function DemoPage() {
             className="font-semibold uppercase"
             style={{ color: '#2563eb', letterSpacing: '0.2em', fontSize: '11px' }}
           >
-            PRESENCE PROTOCOL — LIVE SYSTEM DEMONSTRATION
+            {t('demo.header')}
           </span>
         </div>
         <Link
@@ -125,7 +130,7 @@ export default function DemoPage() {
             textDecoration: 'none',
           }}
         >
-          ← BACK
+          {t('demo.back')}
         </Link>
       </header>
 
@@ -136,7 +141,7 @@ export default function DemoPage() {
         <div className="grid grid-cols-3 shrink-0 border-b" style={{ borderColor: '#1a1a1a' }}>
           {PANEL_LABELS.map((label, i) => (
             <div
-              key={label}
+              key={i}
               className="flex items-center gap-2 px-4 py-2"
               style={{ borderRight: i < 2 ? '1px solid #1a1a1a' : 'none' }}
             >
@@ -149,13 +154,13 @@ export default function DemoPage() {
         {/* Three-panel grid */}
         <div className="flex-1 grid grid-cols-3 overflow-hidden">
           <div className="overflow-hidden" style={{ borderRight: '1px solid #2563eb' }}>
-            <BankPanel stage={bankStage} />
+            <BankPanel stage={bankStage} t={t} />
           </div>
           <div className="overflow-hidden" style={{ borderRight: '1px solid #2563eb' }}>
-            <PhonePanel phase={phonePhase} />
+            <PhonePanel phase={phonePhase} t={t} />
           </div>
           <div className="overflow-hidden">
-            <HandshakePanel key={handshakeKey} active={handshakeActive} />
+            <HandshakePanel key={handshakeKey} active={handshakeActive} t={t} />
           </div>
         </div>
       </div>
@@ -181,7 +186,7 @@ export default function DemoPage() {
           onMouseLeave={(e) => (e.currentTarget.style.background = '#2563eb')}
         >
           <span style={{ fontSize: '8px' }}>▶</span>
-          REPLAY DEMONSTRATION
+          {t('demo.replay')}
         </button>
         <p
           style={{
@@ -192,7 +197,7 @@ export default function DemoPage() {
             lineHeight: '1.7',
           }}
         >
-          Simulation demonstrates cryptographic challenge-response flow. Ultrasonic transport layer simulated in software.
+          {t('demo.disclaimer')}
         </p>
       </div>
 

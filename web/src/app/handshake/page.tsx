@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import NavBar from '../components/NavBar';
+import { useLanguage } from '@/context/LanguageContext';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -18,6 +19,7 @@ const CHECK_LENGTH = 70;
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function HandshakePage() {
+  const { t } = useLanguage();
   const [phase, setPhase] = useState<
     'drawing' | 'locking' | 'revealed' | 'complete'
   >('drawing');
@@ -38,7 +40,6 @@ export default function HandshakePage() {
       const duration = 2000;
       const progress = Math.min(elapsed / duration, 1);
 
-      // Heavy cubic-bezier easing — slow start, heavy slam finish
       const eased =
         progress < 0.5
           ? 4 * progress * progress * progress
@@ -49,17 +50,14 @@ export default function HandshakePage() {
       if (progress < 1) {
         rafRef.current = requestAnimationFrame(animate);
       } else {
-        // Shield fully drawn → vault lock
         setPhase('locking');
 
-        // Flash — vault slams shut
         setTimeout(() => {
           setLockFlash(true);
           setTimeout(() => setLockFlash(false), 200);
           setPhase('revealed');
         }, 300);
 
-        // Staggered reveals
         setTimeout(() => setShowText(true), 700);
         setTimeout(() => setShowDetails(true), 1200);
         setTimeout(() => {
@@ -102,7 +100,7 @@ export default function HandshakePage() {
         rel="stylesheet"
       />
 
-      {/* ── Lock flash — vault slam overlay ── */}
+      {/* ── Lock flash ── */}
       <div
         className="fixed inset-0 pointer-events-none z-50 transition-opacity duration-200"
         style={{
@@ -136,7 +134,6 @@ export default function HandshakePage() {
 
         {/* ── SHIELD SVG ── */}
         <div className="relative flex items-center justify-center mb-12" style={{ width: 160, height: 180 }}>
-          {/* Glow behind shield */}
           <div
             className="absolute transition-all duration-600"
             style={{
@@ -157,7 +154,6 @@ export default function HandshakePage() {
             fill="none"
             className="relative z-10"
           >
-            {/* Shield outline — strokes in via dashoffset */}
             <path
               d={SHIELD_PATH}
               stroke="#2563eb"
@@ -171,8 +167,6 @@ export default function HandshakePage() {
                 filter: 'drop-shadow(0 0 14px rgba(37,99,235,0.5))',
               }}
             />
-
-            {/* Shield fill — appears after lock */}
             <path
               d={SHIELD_PATH}
               fill="rgba(37,99,235,0.03)"
@@ -180,8 +174,6 @@ export default function HandshakePage() {
               className="transition-opacity duration-600"
               style={{ opacity: phase === 'drawing' ? 0 : 1 }}
             />
-
-            {/* Checkmark — draws inside after shield completes */}
             <path
               d={CHECK_PATH}
               stroke="#2563eb"
@@ -201,58 +193,19 @@ export default function HandshakePage() {
             />
           </svg>
 
-          {/* Corner brackets — targeting reticle */}
+          {/* Corner brackets */}
           <div
             className="absolute pointer-events-none transition-opacity duration-600"
-            style={{
-              inset: -12,
-              opacity: showText ? 1 : 0,
-            }}
+            style={{ inset: -12, opacity: showText ? 1 : 0 }}
           >
-            {/* Top-left */}
-            <span
-              className="absolute"
-              style={{
-                top: -8, left: -8,
-                width: 16, height: 16,
-                borderTop: '1px solid rgba(37,99,235,0.25)',
-                borderLeft: '1px solid rgba(37,99,235,0.25)',
-              }}
-            />
-            {/* Top-right */}
-            <span
-              className="absolute"
-              style={{
-                top: -8, right: -8,
-                width: 16, height: 16,
-                borderTop: '1px solid rgba(37,99,235,0.25)',
-                borderRight: '1px solid rgba(37,99,235,0.25)',
-              }}
-            />
-            {/* Bottom-left */}
-            <span
-              className="absolute"
-              style={{
-                bottom: -8, left: -8,
-                width: 16, height: 16,
-                borderBottom: '1px solid rgba(37,99,235,0.25)',
-                borderLeft: '1px solid rgba(37,99,235,0.25)',
-              }}
-            />
-            {/* Bottom-right */}
-            <span
-              className="absolute"
-              style={{
-                bottom: -8, right: -8,
-                width: 16, height: 16,
-                borderBottom: '1px solid rgba(37,99,235,0.25)',
-                borderRight: '1px solid rgba(37,99,235,0.25)',
-              }}
-            />
+            <span className="absolute" style={{ top: -8, left: -8, width: 16, height: 16, borderTop: '1px solid rgba(37,99,235,0.25)', borderLeft: '1px solid rgba(37,99,235,0.25)' }} />
+            <span className="absolute" style={{ top: -8, right: -8, width: 16, height: 16, borderTop: '1px solid rgba(37,99,235,0.25)', borderRight: '1px solid rgba(37,99,235,0.25)' }} />
+            <span className="absolute" style={{ bottom: -8, left: -8, width: 16, height: 16, borderBottom: '1px solid rgba(37,99,235,0.25)', borderLeft: '1px solid rgba(37,99,235,0.25)' }} />
+            <span className="absolute" style={{ bottom: -8, right: -8, width: 16, height: 16, borderBottom: '1px solid rgba(37,99,235,0.25)', borderRight: '1px solid rgba(37,99,235,0.25)' }} />
           </div>
         </div>
 
-        {/* ── PRESENCE VERIFIED — massive thin uppercase ── */}
+        {/* ── PRESENCE VERIFIED ── */}
         <h1
           className="text-center mb-5 transition-all duration-800"
           style={{
@@ -266,10 +219,9 @@ export default function HandshakePage() {
             transform: showText ? 'translateY(0)' : 'translateY(20px)',
           }}
         >
-          PRESENCE VERIFIED
+          {t('handshake.title')}
         </h1>
 
-        {/* ── Subtitle — grey monospace ── */}
         <p
           className="text-center mb-10 transition-all duration-800"
           style={{
@@ -284,7 +236,7 @@ export default function HandshakePage() {
             transitionDelay: '0.15s',
           }}
         >
-          Physical presence confirmed via ultrasonic handshake — Transaction authorised
+          {t('handshake.subtitle')}
         </p>
 
         {/* ── Divider ── */}
@@ -300,7 +252,7 @@ export default function HandshakePage() {
           }}
         />
 
-        {/* ── Session ID — electric blue monospace ── */}
+        {/* ── Session ID ── */}
         <div
           className="flex flex-col items-center gap-1.5 mb-5 transition-all duration-600"
           style={{
@@ -310,14 +262,9 @@ export default function HandshakePage() {
         >
           <span
             className="text-xs uppercase font-medium"
-            style={{
-              fontSize: '9px',
-              letterSpacing: '0.2em',
-              color: '#444',
-              fontFamily: "'IBM Plex Mono', monospace",
-            }}
+            style={{ fontSize: '9px', letterSpacing: '0.2em', color: '#444', fontFamily: "'IBM Plex Mono', monospace" }}
           >
-            SESSION
+            {t('handshake.session')}
           </span>
           <span
             className="font-medium session-glow"
@@ -344,23 +291,13 @@ export default function HandshakePage() {
         >
           <span
             className="text-xs uppercase font-medium"
-            style={{
-              fontSize: '9px',
-              letterSpacing: '0.2em',
-              color: '#444',
-              fontFamily: "'IBM Plex Mono', monospace",
-            }}
+            style={{ fontSize: '9px', letterSpacing: '0.2em', color: '#444', fontFamily: "'IBM Plex Mono', monospace" }}
           >
-            VERIFIED AT
+            {t('handshake.verified_at')}
           </span>
           <span
             className="font-light"
-            style={{
-              fontSize: '13px',
-              color: '#777',
-              letterSpacing: '0.05em',
-              fontFamily: "'IBM Plex Mono', monospace",
-            }}
+            style={{ fontSize: '13px', color: '#777', letterSpacing: '0.05em', fontFamily: "'IBM Plex Mono', monospace" }}
           >
             {formattedTime}
           </span>
@@ -383,7 +320,7 @@ export default function HandshakePage() {
             transform: showFooter ? 'translateY(0)' : 'translateY(8px)',
           }}
         >
-          THIS CONFIRMATION CANNOT BE REPLICATED BY VOICE CLONING OR DEEPFAKE TECHNOLOGY
+          {t('handshake.antideepfake')}
         </p>
       </div>
 
@@ -397,35 +334,19 @@ export default function HandshakePage() {
         }}
       >
         <div className="flex items-center gap-2">
-          <div
-            className="w-1.5 h-1.5"
-            style={{
-              background: '#2563eb',
-              boxShadow: '0 0 10px rgba(37,99,235,0.5)',
-            }}
-          />
+          <div className="w-1.5 h-1.5" style={{ background: '#2563eb', boxShadow: '0 0 10px rgba(37,99,235,0.5)' }} />
           <span
             className="text-xs uppercase font-medium"
-            style={{
-              fontSize: '10px',
-              letterSpacing: '0.12em',
-              color: '#444',
-              fontFamily: "'IBM Plex Mono', monospace",
-            }}
+            style={{ fontSize: '10px', letterSpacing: '0.12em', color: '#444', fontFamily: "'IBM Plex Mono', monospace" }}
           >
-            PROTOCOL SEALED
+            {t('handshake.protocol_sealed')}
           </span>
         </div>
         <span
           className="text-xs"
-          style={{
-            fontSize: '9px',
-            letterSpacing: '0.1em',
-            color: '#222',
-            fontFamily: "'IBM Plex Mono', monospace",
-          }}
+          style={{ fontSize: '9px', letterSpacing: '0.1em', color: '#222', fontFamily: "'IBM Plex Mono', monospace" }}
         >
-          PRESENCE PROTOCOL v1.0 — IMMUTABLE RECORD
+          {t('handshake.footer')}
         </span>
       </footer>
 

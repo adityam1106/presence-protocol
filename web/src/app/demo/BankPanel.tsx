@@ -1,5 +1,7 @@
 'use client';
 
+import type { TranslationKey } from '@/lib/i18n';
+
 type BankStage = 'idle' | 'processing' | 'approved';
 
 const DEMO_TOKEN = 'a3f7e2b8c1d94e6f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4';
@@ -10,7 +12,7 @@ function tokenToGrid(token: string): string[] {
   return pairs;
 }
 
-export default function BankPanel({ stage }: { stage: BankStage }) {
+export default function BankPanel({ stage, t }: { stage: BankStage; t: (key: TranslationKey) => string }) {
   const isProcessing = stage === 'processing';
   const isApproved = stage === 'approved';
 
@@ -29,7 +31,7 @@ export default function BankPanel({ stage }: { stage: BankStage }) {
           className="font-semibold uppercase truncate"
           style={{ letterSpacing: '0.16em', color: '#888', fontSize: '8px' }}
         >
-          FIRST NATIONAL BANK — SECURE TRANSACTION TERMINAL
+          {t('demo.bank_name')}
         </span>
       </div>
 
@@ -39,7 +41,7 @@ export default function BankPanel({ stage }: { stage: BankStage }) {
         style={{ letterSpacing: '0.15em', color: '#555', borderColor: '#1a1a1a', background: '#0a0a0a', fontSize: '8px' }}
       >
         <span className="inline-block w-1 h-1 shrink-0" style={{ background: '#2563eb' }} />
-        <span className="uppercase font-semibold">TRANSACTION RECORD</span>
+        <span className="uppercase font-semibold">{t('demo.tx_record')}</span>
       </div>
 
       {/* ── Transaction data ── */}
@@ -122,7 +124,7 @@ export default function BankPanel({ stage }: { stage: BankStage }) {
                 style={{ background: '#2563eb', boxShadow: '0 0 8px rgba(37,99,235,0.6)' }}
               />
               <span style={{ color: '#60a5fa', letterSpacing: '0.08em', fontSize: '8px' }}>
-                BROADCASTING PRESENCE CHALLENGE…
+                {t('demo.broadcasting')}
               </span>
             </div>
             <div className="w-full" style={{ border: '1px solid #1a1a1a', background: '#060606' }}>
@@ -136,7 +138,7 @@ export default function BankPanel({ stage }: { stage: BankStage }) {
                   fontSize: '7px',
                 }}
               >
-                ULTRASONIC CHALLENGE BROADCAST
+                {t('demo.broadcast_label')}
               </div>
               <div className="grid grid-cols-8 gap-px p-2" style={{ background: '#060606' }}>
                 {tokenToGrid(DEMO_TOKEN).map((hex, i) => (
@@ -183,10 +185,10 @@ export default function BankPanel({ stage }: { stage: BankStage }) {
                   textShadow: '0 0 20px rgba(34,197,94,0.3)',
                 }}
               >
-                TRANSACTION AUTHORISED
+                {t('demo.approved_title')}
               </div>
               <div style={{ color: '#22c55e', letterSpacing: '0.1em', fontSize: '8px', opacity: 0.6 }}>
-                PHYSICAL PRESENCE CONFIRMED
+                {t('demo.approved_sub')}
               </div>
             </div>
           </div>
@@ -206,9 +208,9 @@ export default function BankPanel({ stage }: { stage: BankStage }) {
           }}
         />
         <span style={{ color: '#555', letterSpacing: '0.1em', fontSize: '8px' }}>
-          {stage === 'idle'       && 'SYSTEM READY — AWAITING OPERATOR INPUT'}
-          {stage === 'processing' && 'ULTRASONIC BROADCAST ACTIVE'}
-          {stage === 'approved'   && 'TRANSACTION AUTHORISED — SETTLEMENT CLEARED'}
+          {stage === 'idle'       && t('demo.status_ready')}
+          {stage === 'processing' && t('demo.status_broadcasting')}
+          {stage === 'approved'   && t('demo.status_approved')}
         </span>
       </div>
 

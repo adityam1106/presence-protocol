@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import NavBar from '../components/NavBar';
+import { useLanguage } from '@/context/LanguageContext';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -18,14 +19,6 @@ interface ChallengeData {
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
-const PHASE_TEXT: Record<Phase, string> = {
-  awaiting: 'AWAITING CHALLENGE…',
-  received: 'CHALLENGE RECEIVED',
-  signing: 'SIGNING WITH SECURE ENCLAVE…',
-  transmitted: 'PRESENCE TRANSMITTED',
-  failed: 'VERIFICATION FAILED',
-};
-
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function delay(ms: number): Promise<void> {
@@ -40,6 +33,15 @@ export default function PhonePage() {
   const [error, setError] = useState<string | null>(null);
   const [clock, setClock] = useState('');
   const [txTimestamp, setTxTimestamp] = useState<string | null>(null);
+  const { t } = useLanguage();
+
+  const PHASE_TEXT: Record<Phase, string> = {
+    awaiting:    t('phone.awaiting'),
+    received:    t('phone.received'),
+    signing:     t('phone.signing'),
+    transmitted: t('phone.transmitted'),
+    failed:      t('phone.failed'),
+  };
 
   // Live clock
   useEffect(() => {
@@ -155,7 +157,6 @@ export default function PhonePage() {
           className="flex items-center justify-between px-6 pt-3 pb-2 shrink-0"
           style={{ background: '#080808' }}
         >
-          {/* Time */}
           <span
             className="text-sm font-semibold"
             style={{ color: '#e0e0e0', fontFamily: "'IBM Plex Mono', monospace", fontSize: '15px' }}
@@ -163,7 +164,6 @@ export default function PhonePage() {
             {clock}
           </span>
 
-          {/* Right icons: signal + wifi + battery */}
           <div className="flex items-center gap-1.5">
             {/* Signal bars */}
             <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
@@ -193,7 +193,6 @@ export default function PhonePage() {
           className="flex items-center justify-center gap-2 py-3 border-b shrink-0"
           style={{ borderColor: '#1a1a1a', background: '#0a0a0a' }}
         >
-          {/* Lock icon */}
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2">
             <rect x="3" y="11" width="18" height="11" rx="0" />
             <path d="M7 11V7a5 5 0 0110 0v4" />
@@ -202,7 +201,7 @@ export default function PhonePage() {
             className="text-xs font-semibold uppercase"
             style={{ color: '#c0c0c0', letterSpacing: '0.18em', fontSize: '11px' }}
           >
-            FIRST NATIONAL BANK
+            {t('phone.bank_name')}
           </span>
         </div>
 
@@ -211,7 +210,6 @@ export default function PhonePage() {
 
           {/* Sonar pulse animation */}
           <div className="relative flex items-center justify-center" style={{ width: 240, height: 240 }}>
-            {/* Concentric rings — always animate when active */}
             {[0, 1, 2, 3, 4].map((i) => (
               <span
                 key={i}
@@ -227,7 +225,6 @@ export default function PhonePage() {
               />
             ))}
 
-            {/* Static fallback rings when not active */}
             {!isActive && [60, 90, 120].map((size) => (
               <span
                 key={size}
@@ -301,7 +298,6 @@ export default function PhonePage() {
               </span>
             </div>
 
-            {/* Error detail */}
             {error && (
               <p
                 className="text-center mt-1"
@@ -327,7 +323,6 @@ export default function PhonePage() {
                 maxWidth: 340,
               }}
             >
-              {/* Card header */}
               <div
                 className="px-4 py-2 border-b text-xs uppercase font-semibold"
                 style={{
@@ -338,16 +333,15 @@ export default function PhonePage() {
                   background: '#0c0c0c',
                 }}
               >
-                SECURE ENCLAVE DATA
+                {t('phone.enclave_label')}
               </div>
 
-              {/* Token ID */}
               <div className="px-4 py-3 border-b" style={{ borderColor: '#141414' }}>
                 <div
                   className="text-xs uppercase mb-1"
                   style={{ color: '#444', letterSpacing: '0.12em', fontSize: '9px' }}
                 >
-                  TOKEN ID
+                  {t('phone.token_id')}
                 </div>
                 <div
                   className="text-xs font-medium break-all"
@@ -364,14 +358,13 @@ export default function PhonePage() {
                 </div>
               </div>
 
-              {/* Timestamp + Enclave Status row */}
-              <div className="grid grid-cols-2" style={{ borderTop: 'none' }}>
+              <div className="grid grid-cols-2">
                 <div className="px-4 py-3" style={{ borderRight: '1px solid #141414' }}>
                   <div
                     className="text-xs uppercase mb-1"
                     style={{ color: '#444', letterSpacing: '0.12em', fontSize: '9px' }}
                   >
-                    TIMESTAMP
+                    {t('phone.timestamp')}
                   </div>
                   <div
                     className="text-xs"
@@ -391,7 +384,7 @@ export default function PhonePage() {
                     className="text-xs uppercase mb-1"
                     style={{ color: '#444', letterSpacing: '0.12em', fontSize: '9px' }}
                   >
-                    ENCLAVE STATUS
+                    {t('phone.enclave_status')}
                   </div>
                   <div className="flex items-center gap-1.5">
                     <div
@@ -410,7 +403,7 @@ export default function PhonePage() {
                         fontFamily: "'IBM Plex Mono', monospace",
                       }}
                     >
-                      ACTIVE
+                      {t('phone.enclave_active')}
                     </span>
                   </div>
                 </div>
@@ -418,7 +411,6 @@ export default function PhonePage() {
             </div>
           )}
 
-          {/* Retry */}
           {(isTransmitted || isFailed) && (
             <button
               onClick={() => {
@@ -446,7 +438,7 @@ export default function PhonePage() {
                 e.currentTarget.style.color = '#555';
               }}
             >
-              RUN AGAIN
+              {t('phone.run_again')}
             </button>
           )}
         </div>
@@ -465,7 +457,7 @@ export default function PhonePage() {
               fontFamily: "'IBM Plex Mono', monospace",
             }}
           >
-            ULTRASONIC PRESENCE TOKEN TRANSMITTED
+            {t('phone.bottom')}
           </span>
         </div>
 

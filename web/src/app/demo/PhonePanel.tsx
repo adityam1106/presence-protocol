@@ -1,19 +1,21 @@
 'use client';
 
-type PhonePhase = 'inactive' | 'received' | 'signing' | 'transmitted';
+import type { TranslationKey } from '@/lib/i18n';
 
-const PHASE_TEXT: Record<Exclude<PhonePhase, 'inactive'>, string> = {
-  received:    'CHALLENGE RECEIVED',
-  signing:     'SIGNING WITH SECURE ENCLAVE…',
-  transmitted: 'PRESENCE TRANSMITTED',
-};
+type PhonePhase = 'inactive' | 'received' | 'signing' | 'transmitted';
 
 const DEMO_TOKEN = 'a3f7e2b8c1d94e6f0a1b2c3d4e5f6a7b';
 
-export default function PhonePanel({ phase }: { phase: PhonePhase }) {
+export default function PhonePanel({ phase, t }: { phase: PhonePhase; t: (key: TranslationKey) => string }) {
   const isInactive    = phase === 'inactive';
   const isActive      = phase === 'received' || phase === 'signing';
   const isTransmitted = phase === 'transmitted';
+
+  const PHASE_TEXT: Record<Exclude<PhonePhase, 'inactive'>, string> = {
+    received:    t('demo.challenge_received'),
+    signing:     t('demo.signing'),
+    transmitted: t('demo.transmitted'),
+  };
 
   const ringColor   = isTransmitted ? 'rgba(34,197,94,0.3)'  : 'rgba(37,99,235,0.35)';
   const accentColor = isTransmitted ? '#22c55e' : '#2563eb';
@@ -47,14 +49,12 @@ export default function PhonePanel({ phase }: { phase: PhonePhase }) {
             14:32
           </span>
           <div className="flex items-center gap-1.5">
-            {/* Signal bars */}
             <svg width="14" height="10" viewBox="0 0 16 12" fill="none">
               <rect x="0" y="8" width="3" height="4"  fill="#e0e0e0" />
               <rect x="4" y="5" width="3" height="7"  fill="#e0e0e0" />
               <rect x="8" y="2" width="3" height="10" fill="#e0e0e0" />
               <rect x="12" y="0" width="3" height="12" fill="#e0e0e0" opacity="0.3" />
             </svg>
-            {/* Battery */}
             <svg width="22" height="10" viewBox="0 0 26 12" fill="none">
               <rect x="0" y="0" width="22" height="12" rx="2" stroke="#e0e0e0" strokeWidth="1" fill="none" />
               <rect x="2" y="2" width="16" height="8" fill="#22c55e" />
@@ -76,7 +76,7 @@ export default function PhonePanel({ phase }: { phase: PhonePhase }) {
             className="font-semibold uppercase"
             style={{ color: '#c0c0c0', letterSpacing: '0.18em', fontSize: '10px' }}
           >
-            FIRST NATIONAL BANK
+            {t('demo.phone_bank')}
           </span>
         </div>
 
@@ -171,11 +171,11 @@ export default function PhonePanel({ phase }: { phase: PhonePhase }) {
                   background: '#0c0c0c',
                 }}
               >
-                SECURE ENCLAVE DATA
+                {t('demo.enclave_label')}
               </div>
               <div className="px-3 py-2.5">
                 <div style={{ color: '#444', fontSize: '7px', letterSpacing: '0.12em', marginBottom: 4 }}>
-                  TOKEN ID
+                  {t('demo.token_id')}
                 </div>
                 <div
                   className="font-medium break-all"
@@ -197,7 +197,7 @@ export default function PhonePanel({ phase }: { phase: PhonePhase }) {
         {/* Bottom label */}
         <div className="flex items-center justify-center py-3 shrink-0" style={{ background: '#080808' }}>
           <span className="uppercase text-center" style={{ color: '#2a2a2a', letterSpacing: '0.1em', fontSize: '7px' }}>
-            ULTRASONIC PRESENCE TOKEN
+            {t('demo.presence_token')}
           </span>
         </div>
 
