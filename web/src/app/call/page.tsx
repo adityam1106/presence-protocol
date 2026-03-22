@@ -25,13 +25,12 @@ interface ChallengeData {
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
-// ─── Helper ──────────────────────────────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/** Split a hex token into a grid of 2-char pairs */
 function tokenToGrid(token: string): string[] {
   const pairs: string[] = [];
   for (let i = 0; i < token.length; i += 2) {
@@ -48,6 +47,16 @@ export default function CallPage() {
   const [challenge, setChallenge] = useState<ChallengeData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [timestamp, setTimestamp] = useState<string | null>(null);
+  const [clock, setClock] = useState('');
+
+  // Live clock
+  useEffect(() => {
+    const tick = () =>
+      setClock(new Date().toLocaleTimeString('en-GB', { hour12: false }));
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
 
   // Auto-redirect to /handshake 2s after approval
   useEffect(() => {
@@ -65,20 +74,15 @@ export default function CallPage() {
       setChallenge(null);
       setTimestamp(null);
 
-      // Phase 1: Request challenge
       setStatus('challenging');
       const res = await fetch(`${API}/api/challenge`, { method: 'POST' });
       const json = await res.json();
-
       if (!json.success) throw new Error(json.error || 'Challenge request failed');
 
       setChallenge(json.data);
       setStatus('broadcasting');
-
-      // Phase 2: Simulate broadcast — wait 3 seconds
       await delay(3000);
 
-      // Phase 3: Verify
       setStatus('verifying');
       const verifyRes = await fetch(`${API}/api/verify`, {
         method: 'POST',
@@ -89,7 +93,6 @@ export default function CallPage() {
         }),
       });
       const verifyJson = await verifyRes.json();
-
       setTimestamp(new Date().toISOString());
 
       if (verifyJson.success && verifyJson.data.verified) {
@@ -110,145 +113,253 @@ export default function CallPage() {
   const isBlocked = status === 'blocked';
 
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        background: '#0a0a0c',
-        color: '#c8ccd0',
-        fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
-        display: 'flex',
-        flexDirection: 'column',
-        paddingTop: 48,
-      }}
-    >
+    <main className="min-h-screen flex flex-col pt-12" style={{ background: '#080808' }}>
       <NavBar />
-      {/* ── Google Font import ── */}
+
+      {/* Google Font import for IBM Plex Mono */}
       {/* eslint-disable-next-line @next/next/no-page-custom-font */}
       <link
-        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap"
         rel="stylesheet"
       />
 
-      {/* ── Top nav bar ── */}
-      <header style={styles.header}>
-        <div style={styles.headerLeft}>
-          <div style={styles.headerDot} />
-          <span style={styles.headerLabel}>MERIDIAN BANK</span>
-          <span style={styles.headerDivider}>|</span>
-          <span style={styles.headerSub}>TRANSACTION SECURITY DESK</span>
-        </div>
-        <div style={styles.headerRight}>
-          <span style={styles.headerTime}>
-            {new Date().toLocaleTimeString('en-GB', { hour12: false })}
+      {/* ═══ HEADER BAR ═══ */}
+      <header
+        className="flex items-center justify-between px-6 py-3 border-b shrink-0"
+        style={{
+          background: '#0a0a0a',
+          borderColor: '#1a1a1a',
+          fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
+        }}
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-2 h-2" style={{ background: '#2563eb', boxShadow: '0 0 8px #2563eb' }} />
+          <span
+            className="text-xs font-semibold uppercase"
+            style={{ letterSpacing: '0.2em', color: '#c0c0c0' }}
+          >
+            FIRST NATIONAL BANK — SECURE TRANSACTION TERMINAL
           </span>
-          <span style={styles.headerDivider}>|</span>
-          <span style={styles.headerAgent}>AGENT: TXN-0042</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <span className="text-xs" style={{ color: '#555', letterSpacing: '0.08em', fontFamily: "'IBM Plex Mono', monospace" }}>
+            {clock}
+          </span>
+          <span style={{ color: '#222' }}>│</span>
+          <span className="text-xs" style={{ color: '#444', letterSpacing: '0.1em', fontFamily: "'IBM Plex Mono', monospace" }}>
+            OPERATOR: TXN-0042
+          </span>
+          <span style={{ color: '#222' }}>│</span>
+          <span className="text-xs" style={{ color: '#333', letterSpacing: '0.1em', fontFamily: "'IBM Plex Mono', monospace" }}>
+            CLEARANCE: LEVEL 4
+          </span>
         </div>
       </header>
 
-      {/* ── Main content ── */}
-      <div style={styles.content}>
-        {/* ── Left: Transaction Details ── */}
-        <section style={styles.txCard}>
-          <div style={styles.txCardHeader}>
-            <span style={styles.txCardHeaderDot} />
-            TRANSACTION DETAILS
+      {/* ═══ MAIN CONTENT ═══ */}
+      <div className="flex flex-1 overflow-hidden" style={{ fontFamily: "'IBM Plex Mono', 'Courier New', monospace" }}>
+
+        {/* ── LEFT: TRANSACTION DETAILS ── */}
+        <section className="flex flex-col shrink-0" style={{ width: '44%', borderRight: '1px solid #1a1a1a' }}>
+          {/* Section header */}
+          <div
+            className="flex items-center gap-2 px-6 py-3 text-xs font-semibold uppercase border-b"
+            style={{ letterSpacing: '0.15em', color: '#666', borderColor: '#1a1a1a', background: '#0a0a0a' }}
+          >
+            <span className="inline-block w-1.5 h-1.5" style={{ background: '#2563eb' }} />
+            TRANSACTION RECORD
           </div>
 
-          <div style={styles.txCardBody}>
-            <div style={styles.txRow}>
-              <span style={styles.txLabel}>Type</span>
-              <span style={styles.txValue}>WIRE TRANSFER — HIGH VALUE</span>
+          {/* Grid data fields */}
+          <div className="flex-1 p-6 overflow-y-auto" style={{ background: '#080808' }}>
+            {/* 3-col grid: IBAN, Amount, TxID */}
+            <div className="grid grid-cols-3 gap-0 mb-6" style={{ border: '1px solid #1a1a1a' }}>
+              {/* IBAN */}
+              <div className="p-4" style={{ borderRight: '1px solid #1a1a1a' }}>
+                <div className="text-xs uppercase mb-2" style={{ color: '#555', letterSpacing: '0.15em', fontSize: '9px' }}>
+                  RECIPIENT IBAN
+                </div>
+                <div className="text-sm font-medium" style={{ color: '#d0d0d0', letterSpacing: '0.06em', fontSize: '13px' }}>
+                  DE89 3704 0044 0532 0130 00
+                </div>
+              </div>
+              {/* Amount */}
+              <div className="p-4" style={{ borderRight: '1px solid #1a1a1a' }}>
+                <div className="text-xs uppercase mb-2" style={{ color: '#555', letterSpacing: '0.15em', fontSize: '9px' }}>
+                  AMOUNT
+                </div>
+                <div className="text-lg font-bold" style={{ color: '#f0f0f0', letterSpacing: '0.02em' }}>
+                  €50,000.00
+                </div>
+              </div>
+              {/* Transaction ID */}
+              <div className="p-4">
+                <div className="text-xs uppercase mb-2" style={{ color: '#555', letterSpacing: '0.15em', fontSize: '9px' }}>
+                  TRANSACTION ID
+                </div>
+                <div className="text-sm font-medium" style={{ color: '#d0d0d0', letterSpacing: '0.04em', fontSize: '13px' }}>
+                  TXN-2026-03847
+                </div>
+              </div>
             </div>
-            <div style={styles.txDivider} />
-            <div style={styles.txRow}>
-              <span style={styles.txLabel}>Amount</span>
-              <span style={{ ...styles.txValue, color: '#f0f0f0', fontSize: 18, fontWeight: 700 }}>
-                €50,000.00
-              </span>
-            </div>
-            <div style={styles.txDivider} />
-            <div style={styles.txRow}>
-              <span style={styles.txLabel}>Recipient IBAN</span>
-              <span style={{ ...styles.txValue, fontFamily: "'IBM Plex Mono', monospace", letterSpacing: '0.05em' }}>
-                DE89 3704 0044 0532 0130 00
-              </span>
-            </div>
-            <div style={styles.txDivider} />
-            <div style={styles.txRow}>
-              <span style={styles.txLabel}>Recipient</span>
-              <span style={styles.txValue}>SCHMIDT INDUSTRIES GMBH</span>
-            </div>
-            <div style={styles.txDivider} />
-            <div style={styles.txRow}>
-              <span style={styles.txLabel}>Reference</span>
-              <span style={styles.txValue}>INV-2026-03847</span>
-            </div>
-            <div style={styles.txDivider} />
-            <div style={styles.txRow}>
-              <span style={styles.txLabel}>Risk Level</span>
-              <span style={styles.txRiskBadge}>HIGH</span>
-            </div>
-          </div>
 
-          {/* ── Regulation notice ── */}
-          <div style={styles.regNotice}>
-            <span style={styles.regIcon}>⚠</span>
-            Per EU PSD3 Art. 97 — transactions exceeding €10,000 require physical
-            presence verification of the authorizing party.
+            {/* Detail rows */}
+            <div style={{ border: '1px solid #1a1a1a' }}>
+              {[
+                { label: 'TYPE', value: 'WIRE TRANSFER — HIGH VALUE' },
+                { label: 'ORIGINATOR', value: 'OPERATIONS DESK / AUTH-7' },
+                { label: 'BENEFICIARY', value: 'SCHMIDT INDUSTRIES GMBH' },
+                { label: 'BIC / SWIFT', value: 'COBADEFFXXX' },
+                { label: 'REFERENCE', value: 'INV-2026-03847' },
+                { label: 'CURRENCY', value: 'EUR' },
+                { label: 'VALUE DATE', value: '2026-03-22' },
+              ].map((row, i, arr) => (
+                <div
+                  key={row.label}
+                  className="flex justify-between items-center px-4 py-3"
+                  style={{
+                    borderBottom: i < arr.length - 1 ? '1px solid #141414' : 'none',
+                  }}
+                >
+                  <span className="text-xs uppercase" style={{ color: '#555', letterSpacing: '0.12em', fontSize: '10px' }}>
+                    {row.label}
+                  </span>
+                  <span className="text-xs" style={{ color: '#aaa', fontSize: '12px' }}>
+                    {row.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Risk indicator */}
+            <div
+              className="flex items-center justify-between px-4 py-3 mt-4"
+              style={{ border: '1px solid #1a1a1a', background: 'rgba(251,191,36,0.03)' }}
+            >
+              <span className="text-xs uppercase" style={{ color: '#555', letterSpacing: '0.12em', fontSize: '10px' }}>
+                RISK ASSESSMENT
+              </span>
+              <span
+                className="text-xs font-bold uppercase px-3 py-1"
+                style={{
+                  color: '#fbbf24',
+                  letterSpacing: '0.15em',
+                  fontSize: '10px',
+                  border: '1px solid rgba(251,191,36,0.25)',
+                  background: 'rgba(251,191,36,0.06)',
+                }}
+              >
+                ■ HIGH
+              </span>
+            </div>
+
+            {/* Regulation notice */}
+            <div
+              className="flex items-start gap-3 px-4 py-3 mt-4"
+              style={{
+                border: '1px solid #1a1a1a',
+                background: '#0a0a0a',
+                fontSize: '10px',
+                lineHeight: '1.7',
+                color: '#555',
+              }}
+            >
+              <span style={{ color: '#f59e0b', fontSize: '12px', flexShrink: 0 }}>⚠</span>
+              <span>
+                PER EU PSD3 ART. 97 — TRANSACTIONS EXCEEDING €10,000 REQUIRE PHYSICAL
+                PRESENCE VERIFICATION OF THE AUTHORIZING PARTY BEFORE SETTLEMENT.
+              </span>
+            </div>
           </div>
         </section>
 
-        {/* ── Right: Verification Panel ── */}
-        <section style={styles.verifyPanel}>
-          <div style={styles.verifyHeader}>
-            <span style={styles.txCardHeaderDot} />
-            PRESENCE VERIFICATION
+        {/* ── RIGHT: VERIFICATION PANEL ── */}
+        <section className="flex flex-col flex-1">
+          <div
+            className="flex items-center gap-2 px-6 py-3 text-xs font-semibold uppercase border-b"
+            style={{ letterSpacing: '0.15em', color: '#666', borderColor: '#1a1a1a', background: '#0a0a0a' }}
+          >
+            <span className="inline-block w-1.5 h-1.5" style={{ background: '#2563eb' }} />
+            PRESENCE VERIFICATION MODULE
           </div>
 
-          <div style={styles.verifyBody}>
-            {/* ── Idle state ── */}
+          <div className="flex-1 flex items-center justify-center p-8" style={{ background: '#080808' }}>
+
+            {/* ── IDLE ── */}
             {status === 'idle' && (
-              <div style={styles.idleContainer}>
-                <div style={styles.shieldIcon}>
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="1.5">
-                    <path d="M12 2L3 7v5c0 5.25 3.83 10.15 9 11.25C17.17 22.15 21 17.25 21 12V7l-9-5z" />
-                  </svg>
-                </div>
-                <p style={styles.idleText}>
-                  Initiate physical presence verification to authorize this transaction.
-                  The system will broadcast an ultrasonic challenge token.
+              <div className="flex flex-col items-center gap-6 max-w-md text-center">
+                <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.2" style={{ opacity: 0.4 }}>
+                  <path d="M12 2L3 7v5c0 5.25 3.83 10.15 9 11.25C17.17 22.15 21 17.25 21 12V7l-9-5z" />
+                </svg>
+                <p className="text-xs uppercase" style={{ color: '#555', letterSpacing: '0.1em', lineHeight: '1.8', fontSize: '11px' }}>
+                  INITIATE PHYSICAL PRESENCE VERIFICATION TO AUTHORIZE THIS TRANSACTION.
+                  THE SYSTEM WILL BROADCAST AN ULTRASONIC CHALLENGE TOKEN TO THE CLIENT DEVICE.
                 </p>
-                <button onClick={initiateVerification} style={styles.initiateBtn}>
-                  <span style={styles.initiateBtnIcon}>▶</span>
+                <button
+                  onClick={initiateVerification}
+                  className="flex items-center gap-3 px-8 py-4 text-xs font-semibold uppercase cursor-pointer border-none"
+                  style={{
+                    background: '#2563eb',
+                    color: '#e0e0e0',
+                    letterSpacing: '0.12em',
+                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontSize: '11px',
+                    transition: 'background 0.15s',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = '#1d4ed8')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = '#2563eb')}
+                >
+                  <span style={{ fontSize: '8px' }}>▶</span>
                   INITIATE PRESENCE VERIFICATION
                 </button>
               </div>
             )}
 
-            {/* ── Processing states ── */}
+            {/* ── PROCESSING ── */}
             {isProcessing && challenge && (
-              <div style={styles.processingContainer}>
-                {/* Status line */}
-                <div style={styles.statusRow}>
-                  <div style={styles.pulsingDot} />
-                  <span style={styles.statusText}>
-                    {status === 'challenging' && 'Requesting challenge token…'}
-                    {status === 'broadcasting' && 'Broadcasting presence challenge…'}
-                    {status === 'verifying' && 'Verifying presence response…'}
+              <div className="flex flex-col items-center gap-8 w-full max-w-lg animate-fade-in">
+                {/* Status message */}
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-2 h-2 animate-pulse"
+                    style={{ background: '#2563eb', boxShadow: '0 0 12px rgba(37,99,235,0.6)' }}
+                  />
+                  <span className="text-xs uppercase font-medium" style={{ color: '#60a5fa', letterSpacing: '0.1em', fontSize: '11px' }}>
+                    {status === 'challenging' && 'REQUESTING CHALLENGE TOKEN…'}
+                    {status === 'broadcasting' && 'BROADCASTING PRESENCE CHALLENGE…'}
+                    {status === 'verifying' && 'VERIFYING PRESENCE RESPONSE…'}
                   </span>
                 </div>
 
-                {/* Token grid */}
-                <div style={styles.tokenSection}>
-                  <div style={styles.tokenLabel}>CHALLENGE TOKEN</div>
-                  <div style={styles.tokenGrid}>
+                {/* Token grid container */}
+                <div className="w-full" style={{ border: '1px solid #1a1a1a', background: '#060606' }}>
+                  {/* Container label */}
+                  <div
+                    className="px-4 py-2 text-xs uppercase font-semibold border-b"
+                    style={{
+                      letterSpacing: '0.2em',
+                      fontSize: '9px',
+                      color: '#2563eb',
+                      borderColor: '#1a1a1a',
+                      background: '#0a0a0a',
+                    }}
+                  >
+                    ULTRASONIC CHALLENGE BROADCAST
+                  </div>
+                  {/* Hex grid */}
+                  <div className="grid grid-cols-8 gap-px p-4" style={{ background: '#060606' }}>
                     {tokenToGrid(challenge.token).map((hex, i) => (
                       <span
                         key={i}
+                        className="flex items-center justify-center py-2 text-sm font-semibold uppercase"
                         style={{
-                          ...styles.tokenCell,
-                          animationDelay: `${i * 30}ms`,
+                          color: '#2563eb',
+                          fontFamily: "'IBM Plex Mono', monospace",
+                          fontSize: '13px',
+                          textShadow: '0 0 10px rgba(37,99,235,0.5)',
+                          background: 'rgba(37,99,235,0.03)',
+                          border: '1px solid rgba(37,99,235,0.08)',
+                          animation: `fadeInCell 0.3s ease-out ${i * 30}ms both`,
                         }}
                       >
                         {hex}
@@ -257,67 +368,169 @@ export default function CallPage() {
                   </div>
                 </div>
 
-                {/* Session info */}
-                <div style={styles.sessionRow}>
-                  <span style={styles.sessionLabel}>SESSION</span>
-                  <span style={styles.sessionValue}>{challenge.sessionId}</span>
+                {/* Session row */}
+                <div className="flex items-center gap-3">
+                  <span className="text-xs uppercase" style={{ color: '#444', letterSpacing: '0.15em', fontSize: '9px' }}>SESSION</span>
+                  <span className="text-xs" style={{ color: '#666', fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px' }}>
+                    {challenge.sessionId}
+                  </span>
                 </div>
               </div>
             )}
 
             {isProcessing && !challenge && (
-              <div style={styles.processingContainer}>
-                <div style={styles.statusRow}>
-                  <div style={styles.pulsingDot} />
-                  <span style={styles.statusText}>Requesting challenge token…</span>
-                </div>
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-2 h-2 animate-pulse"
+                  style={{ background: '#2563eb', boxShadow: '0 0 12px rgba(37,99,235,0.6)' }}
+                />
+                <span className="text-xs uppercase font-medium" style={{ color: '#60a5fa', letterSpacing: '0.1em', fontSize: '11px' }}>
+                  REQUESTING CHALLENGE TOKEN…
+                </span>
               </div>
             )}
 
-            {/* ── Approved ── */}
+            {/* ── APPROVED ── */}
             {isApproved && (
-              <div style={styles.resultContainer}>
-                <div style={styles.resultIconWrapApproved}>
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5">
+              <div className="flex flex-col items-center w-full animate-fade-in">
+                {/* Full-width green banner */}
+                <div
+                  className="w-full flex flex-col items-center justify-center py-12 px-8"
+                  style={{
+                    background: 'rgba(34,197,94,0.06)',
+                    borderTop: '2px solid #22c55e',
+                    borderBottom: '2px solid #22c55e',
+                  }}
+                >
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" className="mb-6">
                     <path strokeLinecap="square" strokeLinejoin="miter" d="M5 13l4 4L19 7" />
                   </svg>
+                  <div
+                    className="text-2xl font-bold uppercase text-center mb-4"
+                    style={{
+                      color: '#22c55e',
+                      letterSpacing: '0.15em',
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      textShadow: '0 0 30px rgba(34,197,94,0.3)',
+                    }}
+                  >
+                    TRANSACTION AUTHORISED
+                  </div>
+                  <div
+                    className="text-xs uppercase text-center"
+                    style={{ color: '#22c55e', letterSpacing: '0.1em', opacity: 0.6, fontSize: '10px' }}
+                  >
+                    PHYSICAL PRESENCE CONFIRMED — SETTLEMENT APPROVED
+                  </div>
                 </div>
-                <div style={styles.resultTitleApproved}>
-                  Physical Presence Confirmed — Transaction Approved
+
+                {/* Meta info */}
+                <div className="flex flex-col items-center gap-2 mt-6">
+                  <div className="flex items-center gap-6">
+                    <span className="text-xs" style={{ color: '#444', fontSize: '10px', letterSpacing: '0.08em' }}>
+                      SESSION: {challenge?.sessionId.slice(0, 16)}…
+                    </span>
+                    <span className="text-xs" style={{ color: '#444', fontSize: '10px', letterSpacing: '0.08em' }}>
+                      VERIFIED: {timestamp}
+                    </span>
+                  </div>
+                  <div className="text-xs uppercase mt-1" style={{ color: '#333', letterSpacing: '0.1em', fontSize: '9px' }}>
+                    REDIRECTING TO HANDSHAKE CONFIRMATION…
+                  </div>
                 </div>
-                <div style={styles.resultMeta}>
-                  <span>Session: {challenge?.sessionId.slice(0, 12)}…</span>
-                  <span>Verified at: {timestamp}</span>
-                </div>
-                <div style={{ fontSize: 10, color: '#4b5563', letterSpacing: '0.1em', marginTop: 4 }}>
-                  Redirecting to handshake confirmation…
-                </div>
-                <button onClick={() => { setStatus('idle'); setChallenge(null); }} style={styles.resetBtn}>
+
+                <button
+                  onClick={() => { setStatus('idle'); setChallenge(null); }}
+                  className="mt-6 px-6 py-3 text-xs font-medium uppercase cursor-pointer"
+                  style={{
+                    color: '#666',
+                    background: 'transparent',
+                    border: '1px solid #222',
+                    letterSpacing: '0.1em',
+                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontSize: '10px',
+                    transition: 'border-color 0.15s',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#444')}
+                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#222')}
+                >
                   NEW VERIFICATION
                 </button>
               </div>
             )}
 
-            {/* ── Blocked ── */}
+            {/* ── BLOCKED ── */}
             {isBlocked && (
-              <div style={styles.resultContainer}>
-                <div style={styles.resultIconWrapBlocked}>
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5">
+              <div className="flex flex-col items-center w-full animate-fade-in">
+                {/* Full-width red banner */}
+                <div
+                  className="w-full flex flex-col items-center justify-center py-12 px-8"
+                  style={{
+                    background: 'rgba(239,68,68,0.06)',
+                    borderTop: '2px solid #ef4444',
+                    borderBottom: '2px solid #ef4444',
+                  }}
+                >
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" className="mb-6">
                     <path strokeLinecap="square" strokeLinejoin="miter" d="M6 18L18 6M6 6l12 12" />
                   </svg>
+                  <div
+                    className="text-2xl font-bold uppercase text-center mb-4"
+                    style={{
+                      color: '#ef4444',
+                      letterSpacing: '0.15em',
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      textShadow: '0 0 30px rgba(239,68,68,0.3)',
+                    }}
+                  >
+                    TRANSACTION BLOCKED
+                  </div>
+                  <div
+                    className="text-xs uppercase text-center"
+                    style={{ color: '#ef4444', letterSpacing: '0.1em', opacity: 0.6, fontSize: '10px' }}
+                  >
+                    PRESENCE VERIFICATION FAILED — SETTLEMENT DENIED
+                  </div>
                 </div>
-                <div style={styles.resultTitleBlocked}>
-                  Presence Verification Failed — Transaction Blocked
-                </div>
+
+                {/* Error detail */}
                 {error && (
-                  <div style={styles.errorDetail}>
+                  <div
+                    className="mt-6 px-4 py-3 text-xs text-center"
+                    style={{
+                      color: '#f87171',
+                      border: '1px solid rgba(239,68,68,0.2)',
+                      background: 'rgba(239,68,68,0.04)',
+                      fontSize: '11px',
+                      fontFamily: "'IBM Plex Mono', monospace",
+                    }}
+                  >
                     {error}
                   </div>
                 )}
-                <div style={styles.resultMeta}>
-                  <span>Attempted at: {timestamp}</span>
+
+                {/* Meta */}
+                <div className="flex items-center gap-6 mt-4">
+                  <span className="text-xs" style={{ color: '#444', fontSize: '10px', letterSpacing: '0.08em' }}>
+                    ATTEMPTED: {timestamp}
+                  </span>
                 </div>
-                <button onClick={() => { setStatus('idle'); setChallenge(null); setError(null); }} style={styles.resetBtn}>
+
+                <button
+                  onClick={() => { setStatus('idle'); setChallenge(null); setError(null); }}
+                  className="mt-6 px-6 py-3 text-xs font-medium uppercase cursor-pointer"
+                  style={{
+                    color: '#666',
+                    background: 'transparent',
+                    border: '1px solid #222',
+                    letterSpacing: '0.1em',
+                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontSize: '10px',
+                    transition: 'border-color 0.15s',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#444')}
+                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#222')}
+                >
                   RETRY VERIFICATION
                 </button>
               </div>
@@ -326,40 +539,45 @@ export default function CallPage() {
         </section>
       </div>
 
-      {/* ── Bottom status bar ── */}
-      <footer style={styles.footer}>
-        <div style={styles.footerLeft}>
+      {/* ═══ BOTTOM STATUS BAR ═══ */}
+      <footer
+        className="flex items-center justify-between px-6 py-2.5 border-t shrink-0"
+        style={{
+          borderColor: '#1a1a1a',
+          background: '#0a0a0a',
+          fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
+        }}
+      >
+        <div className="flex items-center gap-2">
           <div
+            className="w-1.5 h-1.5"
             style={{
-              ...styles.footerDot,
-              background: isApproved ? '#22c55e' : isBlocked ? '#ef4444' : isProcessing ? '#3b82f6' : '#4b5563',
+              background: isApproved ? '#22c55e' : isBlocked ? '#ef4444' : isProcessing ? '#2563eb' : '#444',
               boxShadow: isApproved
                 ? '0 0 8px #22c55e'
                 : isBlocked
                   ? '0 0 8px #ef4444'
                   : isProcessing
-                    ? '0 0 8px #3b82f6'
+                    ? '0 0 8px #2563eb'
                     : 'none',
             }}
           />
-          <span style={styles.footerLabel}>
-            {status === 'idle' && 'SYSTEM READY'}
-            {status === 'challenging' && 'GENERATING CHALLENGE…'}
+          <span className="text-xs uppercase" style={{ color: '#555', letterSpacing: '0.12em', fontSize: '10px' }}>
+            {status === 'idle' && 'SYSTEM READY — AWAITING OPERATOR INPUT'}
+            {status === 'challenging' && 'GENERATING CHALLENGE TOKEN…'}
             {status === 'broadcasting' && 'ULTRASONIC BROADCAST ACTIVE'}
             {status === 'verifying' && 'AWAITING PRESENCE RESPONSE…'}
-            {status === 'approved' && 'TRANSACTION AUTHORIZED'}
-            {status === 'blocked' && 'TRANSACTION BLOCKED'}
+            {status === 'approved' && 'TRANSACTION AUTHORISED — SETTLEMENT CLEARED'}
+            {status === 'blocked' && 'TRANSACTION BLOCKED — ALERT LOGGED'}
           </span>
         </div>
-        <span style={styles.footerRight}>PRESENCE PROTOCOL v1.0 — SECURE CHANNEL</span>
+        <span className="text-xs" style={{ color: '#2a2a2a', letterSpacing: '0.1em', fontSize: '9px' }}>
+          PRESENCE PROTOCOL v1.0 ── ENCRYPTED CHANNEL ── AES-256-GCM
+        </span>
       </footer>
 
       {/* ── Keyframe animations ── */}
       <style>{`
-        @keyframes pulse-dot {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.3; }
-        }
         @keyframes fadeInCell {
           from { opacity: 0; transform: scale(0.7); }
           to { opacity: 1; transform: scale(1); }
@@ -368,400 +586,10 @@ export default function CallPage() {
           from { opacity: 0; transform: translateY(12px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        .token-cell {
-          animation: fadeInCell 0.3s ease-out both;
+        .animate-fade-in {
+          animation: fadeInUp 0.4s ease-out;
         }
       `}</style>
     </main>
   );
 }
-
-// ─── Styles ──────────────────────────────────────────────────────────────────
-
-const styles: Record<string, React.CSSProperties> = {
-  // Header
-  header: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '12px 24px',
-    borderBottom: '1px solid #1a1a1f',
-    background: '#0c0c10',
-    flexShrink: 0,
-  },
-  headerLeft: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-  },
-  headerDot: {
-    width: 8,
-    height: 8,
-    background: '#3b82f6',
-    boxShadow: '0 0 10px rgba(59,130,246,0.5)',
-  },
-  headerLabel: {
-    fontSize: 12,
-    fontWeight: 700,
-    letterSpacing: '0.15em',
-    color: '#e2e4e8',
-  },
-  headerDivider: {
-    color: '#2a2a32',
-    fontSize: 14,
-  },
-  headerSub: {
-    fontSize: 10,
-    letterSpacing: '0.12em',
-    color: '#6b7280',
-  },
-  headerRight: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-  },
-  headerTime: {
-    fontSize: 11,
-    color: '#6b7280',
-    letterSpacing: '0.05em',
-  },
-  headerAgent: {
-    fontSize: 10,
-    color: '#4b5563',
-    letterSpacing: '0.1em',
-  },
-
-  // Content
-  content: {
-    flex: 1,
-    display: 'flex',
-    gap: 0,
-    overflow: 'hidden',
-  },
-
-  // Transaction Card
-  txCard: {
-    width: '40%',
-    borderRight: '1px solid #1a1a1f',
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  txCardHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-    padding: '14px 24px',
-    fontSize: 11,
-    fontWeight: 600,
-    letterSpacing: '0.12em',
-    color: '#9ca3af',
-    borderBottom: '1px solid #1a1a1f',
-    background: '#0e0e12',
-  },
-  txCardHeaderDot: {
-    display: 'inline-block',
-    width: 6,
-    height: 6,
-    background: '#3b82f6',
-  },
-  txCardBody: {
-    flex: 1,
-    padding: '20px 24px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 0,
-    overflowY: 'auto',
-  },
-  txRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '14px 0',
-  },
-  txLabel: {
-    fontSize: 10,
-    letterSpacing: '0.1em',
-    color: '#6b7280',
-    textTransform: 'uppercase' as const,
-    flexShrink: 0,
-  },
-  txValue: {
-    fontSize: 13,
-    color: '#d1d5db',
-    textAlign: 'right' as const,
-  },
-  txDivider: {
-    height: 1,
-    background: '#1a1a1f',
-  },
-  txRiskBadge: {
-    fontSize: 10,
-    fontWeight: 700,
-    letterSpacing: '0.15em',
-    color: '#fbbf24',
-    padding: '4px 12px',
-    border: '1px solid rgba(251,191,36,0.3)',
-    background: 'rgba(251,191,36,0.08)',
-  },
-  regNotice: {
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: 10,
-    padding: '16px 24px',
-    fontSize: 10,
-    lineHeight: '1.6',
-    color: '#6b7280',
-    borderTop: '1px solid #1a1a1f',
-    background: '#0c0c0f',
-  },
-  regIcon: {
-    fontSize: 14,
-    color: '#f59e0b',
-    flexShrink: 0,
-    marginTop: -1,
-  },
-
-  // Verify panel
-  verifyPanel: {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  verifyHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-    padding: '14px 24px',
-    fontSize: 11,
-    fontWeight: 600,
-    letterSpacing: '0.12em',
-    color: '#9ca3af',
-    borderBottom: '1px solid #1a1a1f',
-    background: '#0e0e12',
-  },
-  verifyBody: {
-    flex: 1,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 32,
-  },
-
-  // Idle state
-  idleContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 24,
-    maxWidth: 400,
-    textAlign: 'center' as const,
-  },
-  shieldIcon: {
-    opacity: 0.5,
-  },
-  idleText: {
-    fontSize: 12,
-    lineHeight: '1.7',
-    color: '#6b7280',
-  },
-  initiateBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-    padding: '14px 32px',
-    fontSize: 12,
-    fontWeight: 600,
-    letterSpacing: '0.12em',
-    color: '#e2e4e8',
-    background: '#3b82f6',
-    border: 'none',
-    cursor: 'pointer',
-    fontFamily: "'IBM Plex Mono', monospace",
-    transition: 'all 0.15s ease',
-  },
-  initiateBtnIcon: {
-    fontSize: 10,
-  },
-
-  // Processing state
-  processingContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 28,
-    width: '100%',
-    maxWidth: 480,
-    animation: 'fadeInUp 0.4s ease-out',
-  },
-  statusRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-  },
-  pulsingDot: {
-    width: 8,
-    height: 8,
-    background: '#3b82f6',
-    boxShadow: '0 0 12px rgba(59,130,246,0.6)',
-    animation: 'pulse-dot 1.2s ease-in-out infinite',
-  },
-  statusText: {
-    fontSize: 12,
-    letterSpacing: '0.08em',
-    color: '#60a5fa',
-    fontWeight: 500,
-  },
-  tokenSection: {
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 12,
-  },
-  tokenLabel: {
-    fontSize: 9,
-    letterSpacing: '0.2em',
-    color: '#4b5563',
-  },
-  tokenGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(8, 1fr)',
-    gap: 3,
-    padding: 16,
-    background: '#06060a',
-    border: '1px solid #1a1a2e',
-    width: '100%',
-  },
-  tokenCell: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: 13,
-    fontWeight: 600,
-    color: '#3b82f6',
-    padding: '8px 0',
-    background: 'rgba(59,130,246,0.04)',
-    border: '1px solid rgba(59,130,246,0.1)',
-    fontFamily: "'IBM Plex Mono', monospace",
-    textTransform: 'uppercase' as const,
-    textShadow: '0 0 8px rgba(59,130,246,0.4)',
-    animation: 'fadeInCell 0.3s ease-out both',
-  },
-  sessionRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-  },
-  sessionLabel: {
-    fontSize: 9,
-    letterSpacing: '0.15em',
-    color: '#4b5563',
-  },
-  sessionValue: {
-    fontSize: 10,
-    color: '#6b7280',
-    fontFamily: "'IBM Plex Mono', monospace",
-  },
-
-  // Results
-  resultContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 20,
-    maxWidth: 440,
-    textAlign: 'center' as const,
-    animation: 'fadeInUp 0.5s ease-out',
-  },
-  resultIconWrapApproved: {
-    width: 72,
-    height: 72,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    border: '2px solid rgba(34,197,94,0.3)',
-    background: 'rgba(34,197,94,0.06)',
-    boxShadow: '0 0 40px rgba(34,197,94,0.15)',
-  },
-  resultIconWrapBlocked: {
-    width: 72,
-    height: 72,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    border: '2px solid rgba(239,68,68,0.3)',
-    background: 'rgba(239,68,68,0.06)',
-    boxShadow: '0 0 40px rgba(239,68,68,0.15)',
-  },
-  resultTitleApproved: {
-    fontSize: 14,
-    fontWeight: 700,
-    letterSpacing: '0.05em',
-    color: '#22c55e',
-    lineHeight: '1.5',
-  },
-  resultTitleBlocked: {
-    fontSize: 14,
-    fontWeight: 700,
-    letterSpacing: '0.05em',
-    color: '#ef4444',
-    lineHeight: '1.5',
-  },
-  resultMeta: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 4,
-    fontSize: 10,
-    color: '#4b5563',
-  },
-  errorDetail: {
-    fontSize: 11,
-    color: '#f87171',
-    padding: '8px 16px',
-    border: '1px solid rgba(239,68,68,0.2)',
-    background: 'rgba(239,68,68,0.05)',
-  },
-  resetBtn: {
-    marginTop: 8,
-    padding: '10px 24px',
-    fontSize: 11,
-    fontWeight: 600,
-    letterSpacing: '0.1em',
-    color: '#9ca3af',
-    background: 'transparent',
-    border: '1px solid #2a2a32',
-    cursor: 'pointer',
-    fontFamily: "'IBM Plex Mono', monospace",
-    transition: 'all 0.15s ease',
-  },
-
-  // Footer
-  footer: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '10px 24px',
-    borderTop: '1px solid #1a1a1f',
-    background: '#0c0c10',
-    flexShrink: 0,
-  },
-  footerLeft: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-  },
-  footerDot: {
-    width: 6,
-    height: 6,
-  },
-  footerLabel: {
-    fontSize: 10,
-    letterSpacing: '0.12em',
-    color: '#6b7280',
-  },
-  footerRight: {
-    fontSize: 9,
-    letterSpacing: '0.1em',
-    color: '#374151',
-  },
-};
