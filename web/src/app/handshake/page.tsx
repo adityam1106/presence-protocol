@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import NavBar from '../components/NavBar';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -88,6 +89,7 @@ export default function HandshakePage() {
 
   return (
     <main style={styles.main}>
+      <NavBar />
       {/* ── Font import ── */}
       {/* eslint-disable-next-line @next/next/no-page-custom-font */}
       <link

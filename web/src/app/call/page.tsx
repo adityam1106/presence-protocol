@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import NavBar from '../components/NavBar';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -41,10 +43,21 @@ function tokenToGrid(token: string): string[] {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function CallPage() {
+  const router = useRouter();
   const [status, setStatus] = useState<Status>('idle');
   const [challenge, setChallenge] = useState<ChallengeData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [timestamp, setTimestamp] = useState<string | null>(null);
+
+  // Auto-redirect to /handshake 2s after approval
+  useEffect(() => {
+    if (status === 'approved') {
+      const timer = setTimeout(() => {
+        router.push('/handshake');
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [status, router]);
 
   const initiateVerification = useCallback(async () => {
     try {
@@ -105,8 +118,10 @@ export default function CallPage() {
         fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
         display: 'flex',
         flexDirection: 'column',
+        paddingTop: 48,
       }}
     >
+      <NavBar />
       {/* ── Google Font import ── */}
       {/* eslint-disable-next-line @next/next/no-page-custom-font */}
       <link
@@ -273,6 +288,9 @@ export default function CallPage() {
                 <div style={styles.resultMeta}>
                   <span>Session: {challenge?.sessionId.slice(0, 12)}…</span>
                   <span>Verified at: {timestamp}</span>
+                </div>
+                <div style={{ fontSize: 10, color: '#4b5563', letterSpacing: '0.1em', marginTop: 4 }}>
+                  Redirecting to handshake confirmation…
                 </div>
                 <button onClick={() => { setStatus('idle'); setChallenge(null); }} style={styles.resetBtn}>
                   NEW VERIFICATION

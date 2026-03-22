@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import NavBar from '../components/NavBar';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -91,7 +92,8 @@ export default function PhonePage() {
   const isFailed = status === 'failed';
 
   return (
-    <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-black text-white select-none">
+    <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-black text-white select-none" style={{ paddingTop: 48 }}>
+      <NavBar />
       {/* ── Background grid pattern ── */}
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.03]"
