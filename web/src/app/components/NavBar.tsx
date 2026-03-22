@@ -54,12 +54,14 @@ export default function NavBar() {
             onClick={() => setLang(lang === 'en' ? 'de' : 'en')}
             style={styles.langBtn}
             onMouseEnter={(e) => {
-              e.currentTarget.style.color = '#2563eb';
+              e.currentTarget.style.color = '#ffffff';
               e.currentTarget.style.borderColor = '#2563eb';
+              e.currentTarget.style.background = 'rgba(37,99,235,0.12)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.color = '#555';
-              e.currentTarget.style.borderColor = '#222';
+              e.currentTarget.style.color = '#9ca3af';
+              e.currentTarget.style.borderColor = '#374151';
+              e.currentTarget.style.background = 'transparent';
             }}
           >
             {lang === 'en' ? 'DE' : 'EN'}
@@ -132,13 +134,13 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 10,
     fontWeight: 600,
     letterSpacing: '0.15em',
-    padding: '5px 10px',
+    padding: '5px 12px',
     background: 'transparent',
-    border: '1px solid #222',
-    color: '#555',
+    border: '1px solid #374151',
+    color: '#9ca3af',
     cursor: 'pointer',
     fontFamily: "'IBM Plex Mono', monospace",
-    transition: 'color 0.2s ease, border-color 0.2s ease',
+    transition: 'color 0.2s ease, border-color 0.2s ease, background 0.2s ease',
     marginLeft: 8,
   },
 };
