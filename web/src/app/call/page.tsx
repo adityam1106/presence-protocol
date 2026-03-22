@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import NavBar from '../components/NavBar';
+import { useLanguage } from '@/context/LanguageContext';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -43,6 +44,7 @@ function tokenToGrid(token: string): string[] {
 
 export default function CallPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [status, setStatus] = useState<Status>('idle');
   const [challenge, setChallenge] = useState<ChallengeData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -112,6 +114,16 @@ export default function CallPage() {
   const isApproved = status === 'approved';
   const isBlocked = status === 'blocked';
 
+  const DETAIL_ROWS = [
+    { label: t('call.type'),        value: t('call.type_val')        },
+    { label: t('call.originator'),  value: t('call.originator_val')  },
+    { label: t('call.beneficiary'), value: t('call.beneficiary_val') },
+    { label: t('call.bic'),         value: 'COBADEFFXXX'             },
+    { label: t('call.reference'),   value: 'INV-2026-03847'          },
+    { label: t('call.currency'),    value: 'EUR'                     },
+    { label: t('call.value_date'),  value: '2026-03-22'              },
+  ];
+
   return (
     <main className="min-h-screen flex flex-col pt-12" style={{ background: '#080808' }}>
       <NavBar />
@@ -138,7 +150,7 @@ export default function CallPage() {
             className="text-xs font-semibold uppercase"
             style={{ letterSpacing: '0.2em', color: '#c0c0c0' }}
           >
-            FIRST NATIONAL BANK — SECURE TRANSACTION TERMINAL
+            {t('call.bank_name')}
           </span>
         </div>
         <div className="flex items-center gap-4">
@@ -147,11 +159,11 @@ export default function CallPage() {
           </span>
           <span style={{ color: '#222' }}>│</span>
           <span className="text-xs" style={{ color: '#444', letterSpacing: '0.1em', fontFamily: "'IBM Plex Mono', monospace" }}>
-            OPERATOR: TXN-0042
+            {t('call.operator')}
           </span>
           <span style={{ color: '#222' }}>│</span>
           <span className="text-xs" style={{ color: '#333', letterSpacing: '0.1em', fontFamily: "'IBM Plex Mono', monospace" }}>
-            CLEARANCE: LEVEL 4
+            {t('call.clearance')}
           </span>
         </div>
       </header>
@@ -167,7 +179,7 @@ export default function CallPage() {
             style={{ letterSpacing: '0.15em', color: '#666', borderColor: '#1a1a1a', background: '#0a0a0a' }}
           >
             <span className="inline-block w-1.5 h-1.5" style={{ background: '#2563eb' }} />
-            TRANSACTION RECORD
+            {t('call.tx_record')}
           </div>
 
           {/* Grid data fields */}
@@ -177,7 +189,7 @@ export default function CallPage() {
               {/* IBAN */}
               <div className="p-4" style={{ borderRight: '1px solid #1a1a1a' }}>
                 <div className="text-xs uppercase mb-2" style={{ color: '#555', letterSpacing: '0.15em', fontSize: '9px' }}>
-                  RECIPIENT IBAN
+                  {t('call.recipient_iban')}
                 </div>
                 <div className="text-sm font-medium" style={{ color: '#d0d0d0', letterSpacing: '0.06em', fontSize: '13px' }}>
                   DE89 3704 0044 0532 0130 00
@@ -186,7 +198,7 @@ export default function CallPage() {
               {/* Amount */}
               <div className="p-4" style={{ borderRight: '1px solid #1a1a1a' }}>
                 <div className="text-xs uppercase mb-2" style={{ color: '#555', letterSpacing: '0.15em', fontSize: '9px' }}>
-                  AMOUNT
+                  {t('call.amount')}
                 </div>
                 <div className="text-lg font-bold" style={{ color: '#f0f0f0', letterSpacing: '0.02em' }}>
                   €50,000.00
@@ -195,7 +207,7 @@ export default function CallPage() {
               {/* Transaction ID */}
               <div className="p-4">
                 <div className="text-xs uppercase mb-2" style={{ color: '#555', letterSpacing: '0.15em', fontSize: '9px' }}>
-                  TRANSACTION ID
+                  {t('call.tx_id')}
                 </div>
                 <div className="text-sm font-medium" style={{ color: '#d0d0d0', letterSpacing: '0.04em', fontSize: '13px' }}>
                   TXN-2026-03847
@@ -205,15 +217,7 @@ export default function CallPage() {
 
             {/* Detail rows */}
             <div style={{ border: '1px solid #1a1a1a' }}>
-              {[
-                { label: 'TYPE', value: 'WIRE TRANSFER — HIGH VALUE' },
-                { label: 'ORIGINATOR', value: 'OPERATIONS DESK / AUTH-7' },
-                { label: 'BENEFICIARY', value: 'SCHMIDT INDUSTRIES GMBH' },
-                { label: 'BIC / SWIFT', value: 'COBADEFFXXX' },
-                { label: 'REFERENCE', value: 'INV-2026-03847' },
-                { label: 'CURRENCY', value: 'EUR' },
-                { label: 'VALUE DATE', value: '2026-03-22' },
-              ].map((row, i, arr) => (
+              {DETAIL_ROWS.map((row, i, arr) => (
                 <div
                   key={row.label}
                   className="flex justify-between items-center px-4 py-3"
@@ -237,7 +241,7 @@ export default function CallPage() {
               style={{ border: '1px solid #1a1a1a', background: 'rgba(251,191,36,0.03)' }}
             >
               <span className="text-xs uppercase" style={{ color: '#555', letterSpacing: '0.12em', fontSize: '10px' }}>
-                RISK ASSESSMENT
+                {t('call.risk')}
               </span>
               <span
                 className="text-xs font-bold uppercase px-3 py-1"
@@ -249,7 +253,7 @@ export default function CallPage() {
                   background: 'rgba(251,191,36,0.06)',
                 }}
               >
-                ■ HIGH
+                {t('call.risk_val')}
               </span>
             </div>
 
@@ -265,10 +269,7 @@ export default function CallPage() {
               }}
             >
               <span style={{ color: '#f59e0b', fontSize: '12px', flexShrink: 0 }}>⚠</span>
-              <span>
-                PER EU PSD3 ART. 97 — TRANSACTIONS EXCEEDING €10,000 REQUIRE PHYSICAL
-                PRESENCE VERIFICATION OF THE AUTHORIZING PARTY BEFORE SETTLEMENT.
-              </span>
+              <span>{t('call.psd3')}</span>
             </div>
           </div>
         </section>
@@ -280,7 +281,7 @@ export default function CallPage() {
             style={{ letterSpacing: '0.15em', color: '#666', borderColor: '#1a1a1a', background: '#0a0a0a' }}
           >
             <span className="inline-block w-1.5 h-1.5" style={{ background: '#2563eb' }} />
-            PRESENCE VERIFICATION MODULE
+            {t('call.verification_module')}
           </div>
 
           <div className="flex-1 flex items-center justify-center p-8" style={{ background: '#080808' }}>
@@ -292,8 +293,7 @@ export default function CallPage() {
                   <path d="M12 2L3 7v5c0 5.25 3.83 10.15 9 11.25C17.17 22.15 21 17.25 21 12V7l-9-5z" />
                 </svg>
                 <p className="text-xs uppercase" style={{ color: '#555', letterSpacing: '0.1em', lineHeight: '1.8', fontSize: '11px' }}>
-                  INITIATE PHYSICAL PRESENCE VERIFICATION TO AUTHORIZE THIS TRANSACTION.
-                  THE SYSTEM WILL BROADCAST AN ULTRASONIC CHALLENGE TOKEN TO THE CLIENT DEVICE.
+                  {t('call.idle_desc')}
                 </p>
                 <button
                   onClick={initiateVerification}
@@ -310,7 +310,7 @@ export default function CallPage() {
                   onMouseLeave={(e) => (e.currentTarget.style.background = '#2563eb')}
                 >
                   <span style={{ fontSize: '8px' }}>▶</span>
-                  INITIATE PRESENCE VERIFICATION
+                  {t('call.initiate_btn')}
                 </button>
               </div>
             )}
@@ -325,15 +325,14 @@ export default function CallPage() {
                     style={{ background: '#2563eb', boxShadow: '0 0 12px rgba(37,99,235,0.6)' }}
                   />
                   <span className="text-xs uppercase font-medium" style={{ color: '#60a5fa', letterSpacing: '0.1em', fontSize: '11px' }}>
-                    {status === 'challenging' && 'REQUESTING CHALLENGE TOKEN…'}
-                    {status === 'broadcasting' && 'BROADCASTING PRESENCE CHALLENGE…'}
-                    {status === 'verifying' && 'VERIFYING PRESENCE RESPONSE…'}
+                    {status === 'challenging' && t('call.challenging')}
+                    {status === 'broadcasting' && t('call.broadcasting')}
+                    {status === 'verifying'    && t('call.verifying')}
                   </span>
                 </div>
 
-                {/* Token grid container */}
+                {/* Token grid */}
                 <div className="w-full" style={{ border: '1px solid #1a1a1a', background: '#060606' }}>
-                  {/* Container label */}
                   <div
                     className="px-4 py-2 text-xs uppercase font-semibold border-b"
                     style={{
@@ -344,9 +343,8 @@ export default function CallPage() {
                       background: '#0a0a0a',
                     }}
                   >
-                    ULTRASONIC CHALLENGE BROADCAST
+                    {t('call.broadcast_label')}
                   </div>
-                  {/* Hex grid */}
                   <div className="grid grid-cols-8 gap-px p-4" style={{ background: '#060606' }}>
                     {tokenToGrid(challenge.token).map((hex, i) => (
                       <span
@@ -370,7 +368,7 @@ export default function CallPage() {
 
                 {/* Session row */}
                 <div className="flex items-center gap-3">
-                  <span className="text-xs uppercase" style={{ color: '#444', letterSpacing: '0.15em', fontSize: '9px' }}>SESSION</span>
+                  <span className="text-xs uppercase" style={{ color: '#444', letterSpacing: '0.15em', fontSize: '9px' }}>{t('call.session')}</span>
                   <span className="text-xs" style={{ color: '#666', fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px' }}>
                     {challenge.sessionId}
                   </span>
@@ -385,7 +383,7 @@ export default function CallPage() {
                   style={{ background: '#2563eb', boxShadow: '0 0 12px rgba(37,99,235,0.6)' }}
                 />
                 <span className="text-xs uppercase font-medium" style={{ color: '#60a5fa', letterSpacing: '0.1em', fontSize: '11px' }}>
-                  REQUESTING CHALLENGE TOKEN…
+                  {t('call.challenging')}
                 </span>
               </div>
             )}
@@ -393,7 +391,6 @@ export default function CallPage() {
             {/* ── APPROVED ── */}
             {isApproved && (
               <div className="flex flex-col items-center w-full animate-fade-in">
-                {/* Full-width green banner */}
                 <div
                   className="w-full flex flex-col items-center justify-center py-12 px-8"
                   style={{
@@ -414,17 +411,13 @@ export default function CallPage() {
                       textShadow: '0 0 30px rgba(34,197,94,0.3)',
                     }}
                   >
-                    TRANSACTION AUTHORISED
+                    {t('call.approved_title')}
                   </div>
-                  <div
-                    className="text-xs uppercase text-center"
-                    style={{ color: '#22c55e', letterSpacing: '0.1em', opacity: 0.6, fontSize: '10px' }}
-                  >
-                    PHYSICAL PRESENCE CONFIRMED — SETTLEMENT APPROVED
+                  <div className="text-xs uppercase text-center" style={{ color: '#22c55e', letterSpacing: '0.1em', opacity: 0.6, fontSize: '10px' }}>
+                    {t('call.approved_sub')}
                   </div>
                 </div>
 
-                {/* Meta info */}
                 <div className="flex flex-col items-center gap-2 mt-6">
                   <div className="flex items-center gap-6">
                     <span className="text-xs" style={{ color: '#444', fontSize: '10px', letterSpacing: '0.08em' }}>
@@ -435,7 +428,7 @@ export default function CallPage() {
                     </span>
                   </div>
                   <div className="text-xs uppercase mt-1" style={{ color: '#333', letterSpacing: '0.1em', fontSize: '9px' }}>
-                    REDIRECTING TO HANDSHAKE CONFIRMATION…
+                    {t('call.redirecting')}
                   </div>
                 </div>
 
@@ -454,7 +447,7 @@ export default function CallPage() {
                   onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#444')}
                   onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#222')}
                 >
-                  NEW VERIFICATION
+                  {t('call.new_verification')}
                 </button>
               </div>
             )}
@@ -462,7 +455,6 @@ export default function CallPage() {
             {/* ── BLOCKED ── */}
             {isBlocked && (
               <div className="flex flex-col items-center w-full animate-fade-in">
-                {/* Full-width red banner */}
                 <div
                   className="w-full flex flex-col items-center justify-center py-12 px-8"
                   style={{
@@ -483,17 +475,13 @@ export default function CallPage() {
                       textShadow: '0 0 30px rgba(239,68,68,0.3)',
                     }}
                   >
-                    TRANSACTION BLOCKED
+                    {t('call.blocked_title')}
                   </div>
-                  <div
-                    className="text-xs uppercase text-center"
-                    style={{ color: '#ef4444', letterSpacing: '0.1em', opacity: 0.6, fontSize: '10px' }}
-                  >
-                    PRESENCE VERIFICATION FAILED — SETTLEMENT DENIED
+                  <div className="text-xs uppercase text-center" style={{ color: '#ef4444', letterSpacing: '0.1em', opacity: 0.6, fontSize: '10px' }}>
+                    {t('call.blocked_sub')}
                   </div>
                 </div>
 
-                {/* Error detail */}
                 {error && (
                   <div
                     className="mt-6 px-4 py-3 text-xs text-center"
@@ -509,7 +497,6 @@ export default function CallPage() {
                   </div>
                 )}
 
-                {/* Meta */}
                 <div className="flex items-center gap-6 mt-4">
                   <span className="text-xs" style={{ color: '#444', fontSize: '10px', letterSpacing: '0.08em' }}>
                     ATTEMPTED: {timestamp}
@@ -531,7 +518,7 @@ export default function CallPage() {
                   onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#444')}
                   onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#222')}
                 >
-                  RETRY VERIFICATION
+                  {t('call.retry')}
                 </button>
               </div>
             )}
@@ -563,16 +550,16 @@ export default function CallPage() {
             }}
           />
           <span className="text-xs uppercase" style={{ color: '#555', letterSpacing: '0.12em', fontSize: '10px' }}>
-            {status === 'idle' && 'SYSTEM READY — AWAITING OPERATOR INPUT'}
-            {status === 'challenging' && 'GENERATING CHALLENGE TOKEN…'}
-            {status === 'broadcasting' && 'ULTRASONIC BROADCAST ACTIVE'}
-            {status === 'verifying' && 'AWAITING PRESENCE RESPONSE…'}
-            {status === 'approved' && 'TRANSACTION AUTHORISED — SETTLEMENT CLEARED'}
-            {status === 'blocked' && 'TRANSACTION BLOCKED — ALERT LOGGED'}
+            {status === 'idle'        && t('call.status_ready')}
+            {status === 'challenging' && t('call.status_challenging')}
+            {status === 'broadcasting'&& t('call.status_broadcasting')}
+            {status === 'verifying'   && t('call.status_verifying')}
+            {status === 'approved'    && t('call.status_approved')}
+            {status === 'blocked'     && t('call.status_blocked')}
           </span>
         </div>
         <span className="text-xs" style={{ color: '#2a2a2a', letterSpacing: '0.1em', fontSize: '9px' }}>
-          PRESENCE PROTOCOL v1.0 ── ENCRYPTED CHANNEL ── AES-256-GCM
+          {t('call.footer_enc')}
         </span>
       </footer>
 

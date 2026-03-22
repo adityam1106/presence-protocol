@@ -2,16 +2,18 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-
-const NAV_LINKS = [
-  { href: '/', label: 'DEMO' },
-  { href: '/phone', label: 'PHONE' },
-  { href: '/call', label: 'BANK' },
-  { href: '/handshake', label: 'HANDSHAKE' },
-];
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function NavBar() {
   const pathname = usePathname();
+  const { lang, setLang, t } = useLanguage();
+
+  const NAV_LINKS = [
+    { href: '/',          label: t('nav.demo')      },
+    { href: '/phone',     label: t('nav.phone')     },
+    { href: '/call',      label: t('nav.bank')      },
+    { href: '/handshake', label: t('nav.handshake') },
+  ];
 
   return (
     <>
@@ -46,6 +48,22 @@ export default function NavBar() {
               </Link>
             );
           })}
+
+          {/* Language toggle */}
+          <button
+            onClick={() => setLang(lang === 'en' ? 'de' : 'en')}
+            style={styles.langBtn}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = '#2563eb';
+              e.currentTarget.style.borderColor = '#2563eb';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = '#555';
+              e.currentTarget.style.borderColor = '#222';
+            }}
+          >
+            {lang === 'en' ? 'DE' : 'EN'}
+          </button>
         </div>
       </nav>
     </>
@@ -109,5 +127,18 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '14px 14px',
     textDecoration: 'none',
     transition: 'color 0.2s ease, border-color 0.2s ease',
+  },
+  langBtn: {
+    fontSize: 10,
+    fontWeight: 600,
+    letterSpacing: '0.15em',
+    padding: '5px 10px',
+    background: 'transparent',
+    border: '1px solid #222',
+    color: '#555',
+    cursor: 'pointer',
+    fontFamily: "'IBM Plex Mono', monospace",
+    transition: 'color 0.2s ease, border-color 0.2s ease',
+    marginLeft: 8,
   },
 };
